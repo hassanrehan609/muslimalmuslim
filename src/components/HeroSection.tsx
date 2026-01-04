@@ -1,5 +1,6 @@
 import { Moon, Star, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Link } from "react-router-dom";
 
 const HeroSection = () => {
   return (
@@ -51,12 +52,16 @@ const HeroSection = () => {
 
           {/* CTA Buttons */}
           <div className="flex flex-col sm:flex-row gap-4 animate-fade-in" style={{ animationDelay: "0.8s" }}>
-            <Button variant="gold" size="xl">
-              Get Started
-            </Button>
-            <Button variant="glass" size="xl" className="text-primary-foreground border-primary-foreground/30">
-              Explore Features
-            </Button>
+            <Link to="/quran">
+              <Button variant="gold" size="xl">
+                Read Quran
+              </Button>
+            </Link>
+            <a href="#features">
+              <Button variant="glass" size="xl" className="text-primary-foreground border-primary-foreground/30">
+                Explore Features
+              </Button>
+            </a>
           </div>
         </div>
       </div>

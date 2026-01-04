@@ -1,8 +1,10 @@
 import { Link } from "react-router-dom";
 import { ArrowLeft, Sun, Moon, Utensils, Bed, Heart, BookOpen, Sunrise, Cloud } from "lucide-react";
 import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-
+import { useFavorites } from "@/hooks/useFavorites";
+import { toast } from "sonner";
 const duaCategories = [
   {
     id: "morning",
@@ -151,6 +153,22 @@ const duaCategories = [
 ];
 
 const DuasPage = () => {
+  const { isFavorite, toggleFavorite } = useFavorites();
+
+  const handleFavorite = (dua: typeof duaCategories[0]["duas"][0], categoryName: string) => {
+    const id = `dua-${dua.title.replace(/\s+/g, "-").toLowerCase()}`;
+    toggleFavorite({
+      id,
+      type: "dua",
+      title: dua.title,
+      arabic: dua.arabic,
+      transliteration: dua.transliteration,
+      translation: dua.translation,
+      category: categoryName,
+    });
+    toast.success(isFavorite(id) ? "Removed from favorites" : "Added to favorites");
+  };
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -192,9 +210,21 @@ const DuasPage = () => {
               </div>
 
               <div className="space-y-6 max-w-3xl mx-auto">
-                {category.duas.map((dua, index) => (
+                {category.duas.map((dua, index) => {
+                  const favoriteId = `dua-${dua.title.replace(/\s+/g, "-").toLowerCase()}`;
+                  return (
                   <Card key={index} className="p-6 bg-card border-border/50 hover:shadow-elevated transition-shadow">
-                    <h3 className="text-lg font-semibold text-foreground mb-4">{dua.title}</h3>
+                    <div className="flex items-start justify-between mb-4">
+                      <h3 className="text-lg font-semibold text-foreground">{dua.title}</h3>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleFavorite(dua, category.name)}
+                        className="h-9 w-9"
+                      >
+                        <Heart className={`w-5 h-5 ${isFavorite(favoriteId) ? "text-red-500 fill-red-500" : "text-muted-foreground"}`} />
+                      </Button>
+                    </div>
                     
                     <div className="bg-primary/5 rounded-xl p-6 mb-4">
                       <p className="text-2xl md:text-3xl font-arabic text-foreground text-center leading-loose" dir="rtl">
@@ -213,7 +243,8 @@ const DuasPage = () => {
                       </div>
                     </div>
                   </Card>
-                ))}
+                  );
+                })}
               </div>
             </TabsContent>
           ))}
