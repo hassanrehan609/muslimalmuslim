@@ -1,5 +1,6 @@
 import { BookOpen, Heart, Fingerprint, Star, Calendar, Volume2 } from "lucide-react";
 import { Card } from "@/components/ui/card";
+import { Link } from "react-router-dom";
 
 const features = [
   {
@@ -7,36 +8,42 @@ const features = [
     title: "Holy Quran",
     arabic: "القرآن الكريم",
     description: "Read, listen, and explore the complete Quran with translations and tafsir.",
+    link: null,
   },
   {
     icon: Heart,
     title: "Daily Duas",
     arabic: "الأدعية اليومية",
     description: "Collection of essential duas for every moment of your day.",
+    link: "/duas",
   },
   {
     icon: Fingerprint,
     title: "Tasbeeh Counter",
     arabic: "المسبحة",
     description: "Digital tasbeeh to track your dhikr with customizable counters.",
+    link: "/tasbeeh",
   },
   {
     icon: Star,
     title: "99 Names of Allah",
     arabic: "أسماء الله الحسنى",
     description: "Learn and reflect upon the beautiful names of Allah.",
+    link: "/names-of-allah",
   },
   {
     icon: Calendar,
     title: "Islamic Calendar",
     arabic: "التقويم الهجري",
     description: "Hijri calendar with important Islamic dates and events.",
+    link: null,
   },
   {
     icon: Volume2,
     title: "Adhan Alerts",
     arabic: "تنبيهات الأذان",
     description: "Never miss a prayer with beautiful adhan notifications.",
+    link: null,
   },
 ];
 
@@ -55,10 +62,10 @@ const FeatureCards = () => {
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl mx-auto">
           {features.map((feature, index) => {
             const Icon = feature.icon;
-            return (
+            
+            const cardContent = (
               <Card
-                key={feature.title}
-                className="group p-6 bg-card hover:bg-primary hover:text-primary-foreground transition-all duration-300 hover:shadow-elevated hover:-translate-y-1 cursor-pointer border-border/50 hover:border-gold/50"
+                className="group p-6 bg-card hover:bg-primary hover:text-primary-foreground transition-all duration-300 hover:shadow-elevated hover:-translate-y-1 cursor-pointer border-border/50 hover:border-gold/50 h-full"
                 style={{ animationDelay: `${index * 0.1}s` }}
               >
                 <div className="w-14 h-14 rounded-xl bg-primary/10 group-hover:bg-primary-foreground/10 flex items-center justify-center mb-4 transition-colors">
@@ -73,7 +80,20 @@ const FeatureCards = () => {
                 <p className="text-muted-foreground group-hover:text-primary-foreground/80 transition-colors">
                   {feature.description}
                 </p>
+                {!feature.link && (
+                  <span className="inline-block mt-3 text-xs bg-muted text-muted-foreground px-2 py-1 rounded-full group-hover:bg-primary-foreground/20 group-hover:text-primary-foreground">
+                    Coming Soon
+                  </span>
+                )}
               </Card>
+            );
+            
+            return feature.link ? (
+              <Link key={feature.title} to={feature.link}>
+                {cardContent}
+              </Link>
+            ) : (
+              <div key={feature.title}>{cardContent}</div>
             );
           })}
         </div>
