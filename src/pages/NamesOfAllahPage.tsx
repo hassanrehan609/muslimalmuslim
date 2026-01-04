@@ -1,8 +1,10 @@
 import { Link } from "react-router-dom";
-import { ArrowLeft, Search, Star } from "lucide-react";
+import { ArrowLeft, Search, Heart } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
+import { useFavorites } from "@/hooks/useFavorites";
+import { toast } from "sonner";
 
 const namesOfAllah = [
   { number: 1, arabic: "الرَّحْمَنُ", transliteration: "Ar-Rahman", meaning: "The Most Gracious" },
@@ -108,6 +110,20 @@ const namesOfAllah = [
 
 const NamesOfAllahPage = () => {
   const [searchQuery, setSearchQuery] = useState("");
+  const { isFavorite, toggleFavorite } = useFavorites();
+
+  const handleFavorite = (name: typeof namesOfAllah[0]) => {
+    const id = `name-${name.number}`;
+    toggleFavorite({
+      id,
+      type: "name",
+      title: name.transliteration,
+      arabic: name.arabic,
+      transliteration: name.transliteration,
+      meaning: name.meaning,
+    });
+    toast.success(isFavorite(id) ? "Removed from favorites" : "Added to favorites");
+  };
 
   const filteredNames = namesOfAllah.filter(
     (name) =>
@@ -160,7 +176,15 @@ const NamesOfAllahPage = () => {
                     {name.number}
                   </span>
                 </div>
-                <Star className="w-5 h-5 text-gold opacity-0 group-hover:opacity-100 transition-opacity" />
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleFavorite(name);
+                  }}
+                  className="p-1 rounded-full hover:bg-primary-foreground/10 transition-colors"
+                >
+                  <Heart className={`w-5 h-5 ${isFavorite(`name-${name.number}`) ? "text-red-500 fill-red-500" : "text-gold opacity-0 group-hover:opacity-100"} transition-opacity`} />
+                </button>
               </div>
 
               <p className="text-3xl font-arabic text-foreground group-hover:text-primary-foreground text-center mb-3 leading-relaxed" dir="rtl">

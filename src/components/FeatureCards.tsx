@@ -1,4 +1,4 @@
-import { BookOpen, Heart, Fingerprint, Star, Calendar, Volume2 } from "lucide-react";
+import { BookOpen, Heart, Fingerprint, Star, Calendar, Volume2, Bookmark } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Link } from "react-router-dom";
 
@@ -8,7 +8,7 @@ const features = [
     title: "Holy Quran",
     arabic: "القرآن الكريم",
     description: "Read, listen, and explore the complete Quran with translations and tafsir.",
-    link: null,
+    link: "/quran",
   },
   {
     icon: Heart,
@@ -36,14 +36,14 @@ const features = [
     title: "Islamic Calendar",
     arabic: "التقويم الهجري",
     description: "Hijri calendar with important Islamic dates and events.",
-    link: null,
+    link: "/calendar",
   },
   {
-    icon: Volume2,
-    title: "Adhan Alerts",
-    arabic: "تنبيهات الأذان",
-    description: "Never miss a prayer with beautiful adhan notifications.",
-    link: null,
+    icon: Bookmark,
+    title: "My Favorites",
+    arabic: "المفضلة",
+    description: "Quick access to your saved duas, names, and Quran verses.",
+    link: "/favorites",
   },
 ];
 
@@ -80,20 +80,13 @@ const FeatureCards = () => {
                 <p className="text-muted-foreground group-hover:text-primary-foreground/80 transition-colors">
                   {feature.description}
                 </p>
-                {!feature.link && (
-                  <span className="inline-block mt-3 text-xs bg-muted text-muted-foreground px-2 py-1 rounded-full group-hover:bg-primary-foreground/20 group-hover:text-primary-foreground">
-                    Coming Soon
-                  </span>
-                )}
               </Card>
             );
             
-            return feature.link ? (
+            return (
               <Link key={feature.title} to={feature.link}>
                 {cardContent}
               </Link>
-            ) : (
-              <div key={feature.title}>{cardContent}</div>
             );
           })}
         </div>
