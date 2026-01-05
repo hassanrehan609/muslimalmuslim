@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 
 interface QiblaData {
   direction: number;
@@ -6,7 +6,40 @@ interface QiblaData {
   country: string;
   latitude: number;
   longitude: number;
+  distance: number;
 }
+
+// Kaaba coordinates (verified accurate)
+const KAABA_LAT = 21.422487;
+const KAABA_LNG = 39.826206;
+
+const toRadians = (degrees: number) => (degrees * Math.PI) / 180;
+const toDegrees = (radians: number) => (radians * 180) / Math.PI;
+
+// Haversine formula for distance
+const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
+  const R = 6371; // Earth's radius in km
+  const dLat = toRadians(lat2 - lat1);
+  const dLon = toRadians(lon2 - lon1);
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(toRadians(lat1)) * Math.cos(toRadians(lat2)) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return Math.round(R * c);
+};
+
+// Calculate Qibla direction using great circle bearing
+const calculateQiblaDirection = (lat: number, lng: number): number => {
+  const lat1 = toRadians(lat);
+  const lat2 = toRadians(KAABA_LAT);
+  const dLng = toRadians(KAABA_LNG - lng);
+
+  const x = Math.cos(lat2) * Math.sin(dLng);
+  const y = Math.cos(lat1) * Math.sin(lat2) - Math.sin(lat1) * Math.cos(lat2) * Math.cos(dLng);
+
+  let bearing = toDegrees(Math.atan2(x, y));
+  return (bearing + 360) % 360; // Normalize to 0-360
+};
 
 export const useQiblaDirection = () => {
   const [qiblaData, setQiblaData] = useState<QiblaData | null>(null);
@@ -14,94 +47,104 @@ export const useQiblaDirection = () => {
   const [error, setError] = useState<string | null>(null);
   const [compassHeading, setCompassHeading] = useState<number | null>(null);
 
+  const fetchLocationName = useCallback(async (latitude: number, longitude: number) => {
+    try {
+      const res = await fetch(
+        `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=en`
+      );
+      const data = await res.json();
+      return {
+        city: data.city || data.locality || data.principalSubdivision || "Unknown",
+        country: data.countryName || "Unknown",
+      };
+    } catch {
+      return { city: "Unknown", country: "Unknown" };
+    }
+  }, []);
+
+  const updateQiblaData = useCallback(
+    async (latitude: number, longitude: number) => {
+      const direction = calculateQiblaDirection(latitude, longitude);
+      const distance = calculateDistance(latitude, longitude, KAABA_LAT, KAABA_LNG);
+      const location = await fetchLocationName(latitude, longitude);
+
+      setQiblaData({
+        direction: Math.round(direction * 10) / 10,
+        city: location.city,
+        country: location.country,
+        latitude,
+        longitude,
+        distance,
+      });
+      setLoading(false);
+    },
+    [fetchLocationName]
+  );
+
   useEffect(() => {
-    const fetchQiblaDirection = async (latitude: number, longitude: number) => {
-      try {
-        // Calculate Qibla direction using the formula
-        const kaabaLat = 21.4225;
-        const kaabaLng = 39.8262;
+    let watchId: number | null = null;
 
-        const latRad = (latitude * Math.PI) / 180;
-        const lngRad = (longitude * Math.PI) / 180;
-        const kaabaLatRad = (kaabaLat * Math.PI) / 180;
-        const kaabaLngRad = (kaabaLng * Math.PI) / 180;
-
-        const dLng = kaabaLngRad - lngRad;
-
-        const x = Math.sin(dLng);
-        const y = Math.cos(latRad) * Math.tan(kaabaLatRad) - Math.sin(latRad) * Math.cos(dLng);
-
-        let qiblaDirection = (Math.atan2(x, y) * 180) / Math.PI;
-        if (qiblaDirection < 0) qiblaDirection += 360;
-
-        // Get location name
-        const locationRes = await fetch(
-          `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=en`
-        );
-        const locationData = await locationRes.json();
-
-        setQiblaData({
-          direction: Math.round(qiblaDirection * 10) / 10,
-          city: locationData.city || locationData.locality || "Unknown",
-          country: locationData.countryName || "Unknown",
-          latitude,
-          longitude,
-        });
-      } catch (err) {
-        console.error("Failed to calculate Qibla direction:", err);
-        setError("Failed to calculate Qibla direction");
-      }
-    };
-
-    const getLocation = () => {
+    const startWatching = () => {
       if (!navigator.geolocation) {
         setError("Geolocation is not supported");
         setLoading(false);
         return;
       }
 
-      navigator.geolocation.getCurrentPosition(
-        async (position) => {
-          const { latitude, longitude } = position.coords;
-          await fetchQiblaDirection(latitude, longitude);
-          setLoading(false);
+      // Use watchPosition for live updates
+      watchId = navigator.geolocation.watchPosition(
+        (position) => {
+          updateQiblaData(position.coords.latitude, position.coords.longitude);
         },
         (err) => {
           console.error("Geolocation error:", err);
-          // Fallback to a default location (New York)
-          fetchQiblaDirection(40.7128, -74.006).then(() => setLoading(false));
+          setError("Unable to get your location. Using default location.");
+          // Fallback to Mecca for demo
+          updateQiblaData(24.7136, 46.6753); // Riyadh as fallback
         },
-        { timeout: 10000, enableHighAccuracy: true }
+        { 
+          timeout: 15000, 
+          enableHighAccuracy: true,
+          maximumAge: 30000 
+        }
       );
     };
 
     // Device orientation for compass
     const handleOrientation = (event: DeviceOrientationEvent) => {
-      if (event.alpha !== null) {
-        setCompassHeading(event.alpha);
+      // Use webkitCompassHeading for iOS, alpha for others
+      const heading = (event as any).webkitCompassHeading ?? event.alpha;
+      if (heading !== null && heading !== undefined) {
+        setCompassHeading(heading);
       }
     };
 
-    // Request permission for device orientation on iOS
-    if (typeof (DeviceOrientationEvent as any).requestPermission === "function") {
-      (DeviceOrientationEvent as any)
-        .requestPermission()
-        .then((response: string) => {
+    // Request permission for device orientation on iOS 13+
+    const requestOrientationPermission = async () => {
+      if (typeof (DeviceOrientationEvent as any).requestPermission === "function") {
+        try {
+          const response = await (DeviceOrientationEvent as any).requestPermission();
           if (response === "granted") {
-            window.addEventListener("deviceorientation", handleOrientation);
+            window.addEventListener("deviceorientation", handleOrientation, true);
           }
-        })
-        .catch(console.error);
-    } else {
-      window.addEventListener("deviceorientation", handleOrientation);
-    }
+        } catch (e) {
+          console.error("Orientation permission error:", e);
+        }
+      } else {
+        window.addEventListener("deviceorientation", handleOrientation, true);
+      }
+    };
 
-    getLocation();
+    startWatching();
+    requestOrientationPermission();
 
     return () => {
-      window.removeEventListener("deviceorientation", handleOrientation);
+      if (watchId !== null) {
+        navigator.geolocation.clearWatch(watchId);
+      }
+      window.removeEventListener("deviceorientation", handleOrientation, true);
     };
-  }, []);
+  }, [updateQiblaData]);
 
   return { qiblaData, loading, error, compassHeading };
 };

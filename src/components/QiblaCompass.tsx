@@ -1,5 +1,6 @@
-import { MapPin, Loader2 } from "lucide-react";
+import { MapPin, Loader2, Navigation, RefreshCw } from "lucide-react";
 import { useQiblaDirection } from "@/hooks/useQiblaDirection";
+import { Button } from "@/components/ui/button";
 
 const getDirectionLabel = (degrees: number): string => {
   if (degrees >= 337.5 || degrees < 22.5) return "N";
@@ -13,9 +14,9 @@ const getDirectionLabel = (degrees: number): string => {
 };
 
 const QiblaCompass = () => {
-  const { qiblaData, loading, compassHeading } = useQiblaDirection();
+  const { qiblaData, loading, error, compassHeading } = useQiblaDirection();
 
-  // Calculate the rotation for the needle
+  // Calculate the rotation for the needle (relative to device orientation if available)
   const needleRotation = qiblaData
     ? compassHeading !== null
       ? qiblaData.direction - compassHeading
@@ -29,6 +30,10 @@ const QiblaCompass = () => {
         y: 50 - 35 * Math.cos((needleRotation * Math.PI) / 180),
       }
     : { x: 85, y: 15 };
+
+  const handleRefresh = () => {
+    window.location.reload();
+  };
 
   return (
     <section id="qibla" className="py-20 bg-muted islamic-pattern">
@@ -46,7 +51,7 @@ const QiblaCompass = () => {
               
               <div className="flex items-center gap-3 p-4 bg-card rounded-lg shadow-soft">
                 <MapPin className="w-5 h-5 text-primary" />
-                <div>
+                <div className="flex-1">
                   <p className="text-sm text-muted-foreground">Your Location</p>
                   {loading ? (
                     <div className="flex items-center gap-2">
@@ -54,22 +59,57 @@ const QiblaCompass = () => {
                       <span className="text-sm text-muted-foreground">Detecting...</span>
                     </div>
                   ) : (
-                    <p className="font-semibold text-foreground">
-                      {qiblaData?.city}, {qiblaData?.country}
-                    </p>
+                    <>
+                      <p className="font-semibold text-foreground">
+                        {qiblaData?.city}, {qiblaData?.country}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {qiblaData?.latitude.toFixed(4)}°, {qiblaData?.longitude.toFixed(4)}°
+                      </p>
+                    </>
                   )}
                 </div>
-                <div className="ml-auto text-right">
+                <Button variant="ghost" size="icon" onClick={handleRefresh} className="shrink-0">
+                  <RefreshCw className="w-4 h-4" />
+                </Button>
+              </div>
+
+              <div className="mt-4 grid grid-cols-2 gap-4">
+                <div className="p-4 bg-card rounded-lg shadow-soft text-center">
+                  <Navigation className="w-5 h-5 text-primary mx-auto mb-2" />
                   <p className="text-sm text-muted-foreground">Qibla Direction</p>
                   {loading ? (
-                    <span className="text-sm text-muted-foreground">...</span>
+                    <span className="text-lg font-bold text-primary">...</span>
                   ) : (
-                    <p className="font-semibold text-primary">
+                    <p className="text-lg font-bold text-primary">
                       {qiblaData?.direction}° {getDirectionLabel(qiblaData?.direction || 0)}
                     </p>
                   )}
                 </div>
+                <div className="p-4 bg-card rounded-lg shadow-soft text-center">
+                  <span className="text-2xl mb-1 block">🕋</span>
+                  <p className="text-sm text-muted-foreground">Distance to Kaaba</p>
+                  {loading ? (
+                    <span className="text-lg font-bold text-primary">...</span>
+                  ) : (
+                    <p className="text-lg font-bold text-primary">
+                      {qiblaData?.distance.toLocaleString()} km
+                    </p>
+                  )}
+                </div>
               </div>
+
+              {error && (
+                <p className="mt-4 text-sm text-destructive bg-destructive/10 p-3 rounded-lg">
+                  {error}
+                </p>
+              )}
+
+              {compassHeading === null && !loading && (
+                <p className="mt-4 text-sm text-muted-foreground bg-muted p-3 rounded-lg">
+                  💡 Tip: On mobile, rotate your device to see the compass needle point towards Qibla.
+                </p>
+              )}
             </div>
 
             {/* Compass visual */}
