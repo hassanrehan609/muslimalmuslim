@@ -183,3 +183,8 @@
   from { box-shadow: 0 0 20px hsl(42 75% 55% / 0.3); }
   to { box-shadow: 0 0 30px hsl(42 75% 55% / 0.5); }
 }
+
+/* Safe area for mobile bottom nav */
+.safe-area-bottom {
+  padding-bottom: env(safe-area-inset-bottom);
+}
