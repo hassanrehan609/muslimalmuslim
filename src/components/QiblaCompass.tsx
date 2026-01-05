@@ -1,6 +1,35 @@
-import { Compass, MapPin } from "lucide-react";
+import { MapPin, Loader2 } from "lucide-react";
+import { useQiblaDirection } from "@/hooks/useQiblaDirection";
+
+const getDirectionLabel = (degrees: number): string => {
+  if (degrees >= 337.5 || degrees < 22.5) return "N";
+  if (degrees >= 22.5 && degrees < 67.5) return "NE";
+  if (degrees >= 67.5 && degrees < 112.5) return "E";
+  if (degrees >= 112.5 && degrees < 157.5) return "SE";
+  if (degrees >= 157.5 && degrees < 202.5) return "S";
+  if (degrees >= 202.5 && degrees < 247.5) return "SW";
+  if (degrees >= 247.5 && degrees < 292.5) return "W";
+  return "NW";
+};
 
 const QiblaCompass = () => {
+  const { qiblaData, loading, compassHeading } = useQiblaDirection();
+
+  // Calculate the rotation for the needle
+  const needleRotation = qiblaData
+    ? compassHeading !== null
+      ? qiblaData.direction - compassHeading
+      : qiblaData.direction
+    : 0;
+
+  // Calculate Kaaba icon position based on direction
+  const kaabaPosition = qiblaData
+    ? {
+        x: 50 + 35 * Math.sin((needleRotation * Math.PI) / 180),
+        y: 50 - 35 * Math.cos((needleRotation * Math.PI) / 180),
+      }
+    : { x: 85, y: 15 };
+
   return (
     <section id="qibla" className="py-20 bg-muted islamic-pattern">
       <div className="container mx-auto px-4">
@@ -19,11 +48,26 @@ const QiblaCompass = () => {
                 <MapPin className="w-5 h-5 text-primary" />
                 <div>
                   <p className="text-sm text-muted-foreground">Your Location</p>
-                  <p className="font-semibold text-foreground">New York, USA</p>
+                  {loading ? (
+                    <div className="flex items-center gap-2">
+                      <Loader2 className="w-4 h-4 animate-spin text-primary" />
+                      <span className="text-sm text-muted-foreground">Detecting...</span>
+                    </div>
+                  ) : (
+                    <p className="font-semibold text-foreground">
+                      {qiblaData?.city}, {qiblaData?.country}
+                    </p>
+                  )}
                 </div>
                 <div className="ml-auto text-right">
                   <p className="text-sm text-muted-foreground">Qibla Direction</p>
-                  <p className="font-semibold text-primary">58.5° NE</p>
+                  {loading ? (
+                    <span className="text-sm text-muted-foreground">...</span>
+                  ) : (
+                    <p className="font-semibold text-primary">
+                      {qiblaData?.direction}° {getDirectionLabel(qiblaData?.direction || 0)}
+                    </p>
+                  )}
                 </div>
               </div>
             </div>
@@ -46,10 +90,10 @@ const QiblaCompass = () => {
                 {/* Inner compass */}
                 <div className="absolute inset-8 rounded-full bg-card shadow-soft flex items-center justify-center">
                   <div className="relative">
-                    {/* Qibla needle pointing NE (58.5 degrees) */}
+                    {/* Qibla needle */}
                     <div 
-                      className="absolute w-1 h-20 bg-gradient-to-t from-primary to-gold rounded-full origin-bottom left-1/2 -translate-x-1/2 bottom-1/2"
-                      style={{ transform: "translateX(-50%) rotate(58.5deg)" }}
+                      className="absolute w-1 h-20 bg-gradient-to-t from-primary to-gold rounded-full origin-bottom left-1/2 -translate-x-1/2 bottom-1/2 transition-transform duration-300"
+                      style={{ transform: `translateX(-50%) rotate(${needleRotation}deg)` }}
                     />
                     {/* Center dot */}
                     <div className="w-4 h-4 rounded-full bg-gold shadow-gold" />
@@ -58,10 +102,11 @@ const QiblaCompass = () => {
 
                 {/* Kaaba icon at Qibla direction */}
                 <div 
-                  className="absolute w-10 h-10 bg-primary rounded-lg flex items-center justify-center shadow-soft"
+                  className="absolute w-10 h-10 bg-primary rounded-lg flex items-center justify-center shadow-soft transition-all duration-300"
                   style={{ 
-                    top: "10%", 
-                    right: "10%",
+                    left: `${kaabaPosition.x}%`,
+                    top: `${kaabaPosition.y}%`,
+                    transform: "translate(-50%, -50%)",
                   }}
                 >
                   <span className="text-primary-foreground text-xs font-bold">🕋</span>

@@ -11,6 +11,7 @@ import QuranPage from "./pages/QuranPage";
 import HijriCalendarPage from "./pages/HijriCalendarPage";
 import FavoritesPage from "./pages/FavoritesPage";
 import NotFound from "./pages/NotFound";
+import MobileNav from "./components/MobileNav";
 
 const queryClient = new QueryClient();
 
@@ -20,17 +21,20 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/duas" element={<DuasPage />} />
-          <Route path="/names-of-allah" element={<NamesOfAllahPage />} />
-          <Route path="/tasbeeh" element={<TasbeehPage />} />
-          <Route path="/quran" element={<QuranPage />} />
-          <Route path="/calendar" element={<HijriCalendarPage />} />
-          <Route path="/favorites" element={<FavoritesPage />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+        <div className="pb-16 md:pb-0">
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/duas" element={<DuasPage />} />
+            <Route path="/names-of-allah" element={<NamesOfAllahPage />} />
+            <Route path="/tasbeeh" element={<TasbeehPage />} />
+            <Route path="/quran" element={<QuranPage />} />
+            <Route path="/calendar" element={<HijriCalendarPage />} />
+            <Route path="/favorites" element={<FavoritesPage />} />
+            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+          <MobileNav />
+        </div>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>

@@ -1,10 +1,16 @@
 import { Link } from "react-router-dom";
-import { ArrowLeft, Search, Heart } from "lucide-react";
+import { ArrowLeft, Search, Heart, Play, Pause, Volume2 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { useState, useRef } from "react";
 import { useFavorites } from "@/hooks/useFavorites";
 import { toast } from "sonner";
+
+// Audio URLs for each name (using islamcan.com audio)
+const getNameAudioUrl = (number: number): string => {
+  return `https://www.islamcan.com/audio/99-names-of-allah/${number.toString().padStart(2, '0')}.mp3`;
+};
 
 const namesOfAllah = [
   { number: 1, arabic: "الرَّحْمَنُ", transliteration: "Ar-Rahman", meaning: "The Most Gracious" },
@@ -110,7 +116,32 @@ const namesOfAllah = [
 
 const NamesOfAllahPage = () => {
   const [searchQuery, setSearchQuery] = useState("");
+  const [playingName, setPlayingName] = useState<number | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
   const { isFavorite, toggleFavorite } = useFavorites();
+
+  const playNameAudio = (number: number) => {
+    if (audioRef.current) {
+      audioRef.current.pause();
+    }
+    
+    if (playingName === number) {
+      setPlayingName(null);
+      return;
+    }
+
+    const audioUrl = getNameAudioUrl(number);
+    audioRef.current = new Audio(audioUrl);
+    audioRef.current.play().catch(() => {
+      toast.error("Audio not available for this name");
+      setPlayingName(null);
+    });
+    setPlayingName(number);
+    
+    audioRef.current.onended = () => {
+      setPlayingName(null);
+    };
+  };
 
   const handleFavorite = (name: typeof namesOfAllah[0]) => {
     const id = `name-${name.number}`;
@@ -176,15 +207,31 @@ const NamesOfAllahPage = () => {
                     {name.number}
                   </span>
                 </div>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleFavorite(name);
-                  }}
-                  className="p-1 rounded-full hover:bg-primary-foreground/10 transition-colors"
-                >
-                  <Heart className={`w-5 h-5 ${isFavorite(`name-${name.number}`) ? "text-red-500 fill-red-500" : "text-gold opacity-0 group-hover:opacity-100"} transition-opacity`} />
-                </button>
+                <div className="flex items-center gap-1">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      playNameAudio(name.number);
+                    }}
+                    className="p-1.5 rounded-full hover:bg-primary-foreground/10 transition-colors"
+                    aria-label="Play pronunciation"
+                  >
+                    {playingName === name.number ? (
+                      <Pause className="w-4 h-4 text-primary" />
+                    ) : (
+                      <Volume2 className="w-4 h-4 text-gold opacity-0 group-hover:opacity-100 transition-opacity" />
+                    )}
+                  </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleFavorite(name);
+                    }}
+                    className="p-1.5 rounded-full hover:bg-primary-foreground/10 transition-colors"
+                  >
+                    <Heart className={`w-4 h-4 ${isFavorite(`name-${name.number}`) ? "text-red-500 fill-red-500" : "text-gold opacity-0 group-hover:opacity-100"} transition-opacity`} />
+                  </button>
+                </div>
               </div>
 
               <p className="text-3xl font-arabic text-foreground group-hover:text-primary-foreground text-center mb-3 leading-relaxed" dir="rtl">

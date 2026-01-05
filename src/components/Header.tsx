@@ -1,5 +1,6 @@
 import { Moon, Star, Heart } from "lucide-react";
 import { Link } from "react-router-dom";
+import ThemeToggle from "./ThemeToggle";
 
 const Header = () => {
   return (
@@ -16,15 +17,18 @@ const Header = () => {
           </div>
         </Link>
         
-        <nav className="hidden md:flex items-center gap-6">
-          <Link to="/quran" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors">Quran</Link>
-          <Link to="/duas" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors">Duas</Link>
-          <Link to="/calendar" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors">Calendar</Link>
-          <Link to="/favorites" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors flex items-center gap-1">
-            <Heart className="w-4 h-4" />
-            Favorites
-          </Link>
-        </nav>
+        <div className="flex items-center gap-4">
+          <nav className="hidden md:flex items-center gap-6">
+            <Link to="/quran" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors">Quran</Link>
+            <Link to="/duas" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors">Duas</Link>
+            <Link to="/calendar" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors">Calendar</Link>
+            <Link to="/favorites" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors flex items-center gap-1">
+              <Heart className="w-4 h-4" />
+              Favorites
+            </Link>
+          </nav>
+          <ThemeToggle />
+        </div>
       </div>
     </header>
   );

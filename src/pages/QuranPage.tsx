@@ -78,13 +78,16 @@ const QuranPage = () => {
     }
   };
 
-  const playAudio = (verse: Verse) => {
+  const [isPlayingFullSurah, setIsPlayingFullSurah] = useState(false);
+
+  const playAudio = (verse: Verse, autoPlayNext = false) => {
     if (audioRef.current) {
       audioRef.current.pause();
     }
     
-    if (playingVerse === verse.numberInSurah) {
+    if (playingVerse === verse.numberInSurah && !autoPlayNext) {
       setPlayingVerse(null);
+      setIsPlayingFullSurah(false);
       return;
     }
 
@@ -93,8 +96,38 @@ const QuranPage = () => {
     setPlayingVerse(verse.numberInSurah);
     
     audioRef.current.onended = () => {
-      setPlayingVerse(null);
+      // Auto-play next verse if playing full surah
+      if (isPlayingFullSurah || autoPlayNext) {
+        const currentIndex = verses.findIndex(v => v.numberInSurah === verse.numberInSurah);
+        if (currentIndex < verses.length - 1) {
+          const nextVerse = verses[currentIndex + 1];
+          playAudio(nextVerse, true);
+        } else {
+          // End of surah
+          setPlayingVerse(null);
+          setIsPlayingFullSurah(false);
+        }
+      } else {
+        setPlayingVerse(null);
+      }
     };
+  };
+
+  const playFullSurah = () => {
+    if (isPlayingFullSurah) {
+      // Stop playing
+      if (audioRef.current) {
+        audioRef.current.pause();
+      }
+      setPlayingVerse(null);
+      setIsPlayingFullSurah(false);
+    } else {
+      // Start playing from first verse
+      setIsPlayingFullSurah(true);
+      if (verses.length > 0) {
+        playAudio(verses[0], true);
+      }
+    }
   };
 
   const handleFavoriteVerse = (verse: Verse, translation: Translation) => {
@@ -141,10 +174,28 @@ const QuranPage = () => {
             >
               <ArrowLeft className="w-5 h-5 text-foreground" />
             </button>
-            <div>
+            <div className="flex-1">
               <h1 className="text-xl font-bold text-foreground">{selectedSurah.englishName}</h1>
               <p className="text-xs text-muted-foreground">{selectedSurah.englishNameTranslation} • {selectedSurah.numberOfAyahs} verses</p>
             </div>
+            <Button
+              variant={isPlayingFullSurah ? "default" : "outline"}
+              size="sm"
+              onClick={playFullSurah}
+              className="gap-2"
+            >
+              {isPlayingFullSurah ? (
+                <>
+                  <Pause className="w-4 h-4" />
+                  Stop
+                </>
+              ) : (
+                <>
+                  <Play className="w-4 h-4" />
+                  Play All
+                </>
+              )}
+            </Button>
           </div>
         </header>
 
