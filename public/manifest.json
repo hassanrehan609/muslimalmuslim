@@ -1,0 +1,16 @@
+{
+  "name": "Muslim al Muslim",
+  "short_name": "Muslim",
+  "description": "Your Islamic companion for prayers, Quran, and duas",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0d3d2e",
+  "theme_color": "#0d3d2e",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "64x64",
+      "type": "image/x-icon"
+    }
+  ]
+}
