@@ -1,50 +1,17 @@
-import { BookOpen, Heart, Fingerprint, Star, Calendar, Volume2, Bookmark } from "lucide-react";
+import { BookOpen, Heart, Fingerprint, Star, Calendar, Bookmark, Bot, BookText, Moon } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Link } from "react-router-dom";
 
 const features = [
-  {
-    icon: BookOpen,
-    title: "Holy Quran",
-    arabic: "القرآن الكريم",
-    description: "Read, listen, and explore the complete Quran with translations and tafsir.",
-    link: "/quran",
-  },
-  {
-    icon: Heart,
-    title: "Daily Duas",
-    arabic: "الأدعية اليومية",
-    description: "Collection of essential duas for every moment of your day.",
-    link: "/duas",
-  },
-  {
-    icon: Fingerprint,
-    title: "Tasbeeh Counter",
-    arabic: "المسبحة",
-    description: "Digital tasbeeh to track your dhikr with customizable counters.",
-    link: "/tasbeeh",
-  },
-  {
-    icon: Star,
-    title: "99 Names of Allah",
-    arabic: "أسماء الله الحسنى",
-    description: "Learn and reflect upon the beautiful names of Allah.",
-    link: "/names-of-allah",
-  },
-  {
-    icon: Calendar,
-    title: "Islamic Calendar",
-    arabic: "التقويم الهجري",
-    description: "Hijri calendar with important Islamic dates and events.",
-    link: "/calendar",
-  },
-  {
-    icon: Bookmark,
-    title: "My Favorites",
-    arabic: "المفضلة",
-    description: "Quick access to your saved duas, names, and Quran verses.",
-    link: "/favorites",
-  },
+  { icon: BookOpen, title: "Holy Quran", arabic: "القرآن الكريم", description: "Read, listen, and explore the complete Quran with translations.", link: "/quran" },
+  { icon: Heart, title: "Daily Duas", arabic: "الأدعية اليومية", description: "Collection of essential duas for every moment.", link: "/duas" },
+  { icon: Fingerprint, title: "Tasbeeh Counter", arabic: "المسبحة", description: "Digital tasbeeh to track your dhikr.", link: "/tasbeeh" },
+  { icon: Star, title: "99 Names of Allah", arabic: "أسماء الله الحسنى", description: "Learn the beautiful names of Allah.", link: "/names-of-allah" },
+  { icon: Calendar, title: "Islamic Calendar", arabic: "التقويم الهجري", description: "Hijri calendar with important dates.", link: "/calendar" },
+  { icon: Bookmark, title: "My Favorites", arabic: "المفضلة", description: "Quick access to saved items.", link: "/favorites" },
+  { icon: Bot, title: "AI Islamic Chat", arabic: "المحادثة الإسلامية", description: "Ask questions about Islam, Quran & Hadith.", link: "/chatbot" },
+  { icon: BookText, title: "Six Kalmas", arabic: "الکلمات الستة", description: "Learn and recite the six kalmas.", link: "/kalmas" },
+  { icon: Moon, title: "Namaz Guide", arabic: "دليل الصلاة", description: "Complete guide to perform Salah.", link: "/namaz" },
 ];
 
 const FeatureCards = () => {
