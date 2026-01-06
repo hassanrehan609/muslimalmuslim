@@ -13,7 +13,8 @@ const Footer = () => {
             </div>
             <div>
               <h3 className="text-xl font-bold">Muslim al Muslim</h3>
-              <p className="text-sm font-arabic text-gold">مسلم المسلم</p>
+              <p className="text-sm text-gold">Hafiz Imran Badar</p>
+              <p className="text-xs text-primary-foreground/60">Made by Hassan Rehan Badar</p>
             </div>
           </div>
 

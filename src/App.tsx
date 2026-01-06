@@ -12,6 +12,10 @@ import QuranPage from "./pages/QuranPage";
 import HijriCalendarPage from "./pages/HijriCalendarPage";
 import FavoritesPage from "./pages/FavoritesPage";
 import AdhanSettingsPage from "./pages/AdhanSettingsPage";
+import AuthPage from "./pages/AuthPage";
+import ChatbotPage from "./pages/ChatbotPage";
+import KalmasPage from "./pages/KalmasPage";
+import NamazPage from "./pages/NamazPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -36,6 +40,10 @@ const AppContent = () => {
           <Route path="/calendar" element={<HijriCalendarPage />} />
           <Route path="/favorites" element={<FavoritesPage />} />
           <Route path="/adhan-settings" element={<AdhanSettingsPage />} />
+          <Route path="/auth" element={<AuthPage />} />
+          <Route path="/chatbot" element={<ChatbotPage />} />
+          <Route path="/kalmas" element={<KalmasPage />} />
+          <Route path="/namaz" element={<NamazPage />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </div>
