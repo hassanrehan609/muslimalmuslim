@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { useServiceWorker } from "./hooks/useServiceWorker";
+import { usePrayerNotifications } from "./hooks/usePrayerNotifications";
 import Index from "./pages/Index";
 import DuasPage from "./pages/DuasPage";
 import NamesOfAllahPage from "./pages/NamesOfAllahPage";
@@ -22,6 +23,7 @@ const queryClient = new QueryClient();
 
 const AppContent = () => {
   const { isOnline } = useServiceWorker();
+  usePrayerNotifications(); // Initialize prayer notifications
 
   return (
     <>
