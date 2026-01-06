@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { ArrowLeft, Send, Bot, User, Loader2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -11,6 +12,9 @@ type Message = {
 };
 
 const ChatbotPage = () => {
+  const [searchParams] = useSearchParams();
+  const initialQuery = searchParams.get("q") || "";
+  
   const [messages, setMessages] = useState<Message[]>([
     {
       role: "assistant",
@@ -19,6 +23,7 @@ const ChatbotPage = () => {
   ]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [hasProcessedInitialQuery, setHasProcessedInitialQuery] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/islamic-chat`;
 
@@ -28,10 +33,23 @@ const ChatbotPage = () => {
     }
   }, [messages]);
 
-  const sendMessage = async () => {
-    if (!input.trim() || isLoading) return;
+  // Handle initial query from URL
+  useEffect(() => {
+    if (initialQuery && !hasProcessedInitialQuery) {
+      setHasProcessedInitialQuery(true);
+      setInput(initialQuery);
+      // Auto-send after a short delay
+      setTimeout(() => {
+        const fakeEvent = { preventDefault: () => {} } as React.FormEvent;
+        sendMessageWithContent(initialQuery);
+      }, 500);
+    }
+  }, [initialQuery, hasProcessedInitialQuery]);
 
-    const userMessage: Message = { role: "user", content: input.trim() };
+  const sendMessageWithContent = async (content: string) => {
+    if (!content.trim() || isLoading) return;
+
+    const userMessage: Message = { role: "user", content: content.trim() };
     setMessages(prev => [...prev, userMessage]);
     setInput("");
     setIsLoading(true);
@@ -76,9 +94,9 @@ const ChatbotPage = () => {
 
           try {
             const parsed = JSON.parse(jsonStr);
-            const content = parsed.choices?.[0]?.delta?.content;
-            if (content) {
-              assistantContent += content;
+            const deltaContent = parsed.choices?.[0]?.delta?.content;
+            if (deltaContent) {
+              assistantContent += deltaContent;
               setMessages(prev => {
                 const last = prev[prev.length - 1];
                 if (last?.role === "assistant" && prev.length > 1) {
@@ -104,6 +122,10 @@ const ChatbotPage = () => {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const sendMessage = async () => {
+    sendMessageWithContent(input);
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {

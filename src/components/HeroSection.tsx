@@ -1,6 +1,7 @@
 import { Moon, Star, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
+import AIChatSearch from "./AIChatSearch";
 
 const HeroSection = () => {
   return (
@@ -50,8 +51,11 @@ const HeroSection = () => {
             Your complete Islamic companion for prayer times, Quran, Qibla direction, and daily spiritual guidance.
           </p>
 
+          {/* AI Chat Search */}
+          <AIChatSearch />
+
           {/* CTA Buttons */}
-          <div className="flex flex-col sm:flex-row gap-4 animate-fade-in" style={{ animationDelay: "0.8s" }}>
+          <div className="flex flex-col sm:flex-row gap-4 mt-6 animate-fade-in" style={{ animationDelay: "0.9s" }}>
             <Link to="/quran">
               <Button variant="gold" size="xl">
                 Read Quran
