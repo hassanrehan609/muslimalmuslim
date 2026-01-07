@@ -1,6 +1,9 @@
 import { Moon, Star, Heart } from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const Footer = () => {
+  const { t } = useLanguage();
+
   return (
     <footer className="bg-primary text-primary-foreground py-12">
       <div className="container mx-auto px-4">
@@ -28,11 +31,11 @@ const Footer = () => {
 
           {/* Links */}
           <div className="flex flex-wrap justify-center gap-6 mb-8 text-sm">
-            <a href="#prayers" className="hover:text-gold transition-colors">Prayer Times</a>
-            <a href="#qibla" className="hover:text-gold transition-colors">Qibla</a>
-            <a href="#features" className="hover:text-gold transition-colors">Features</a>
-            <a href="#" className="hover:text-gold transition-colors">About</a>
-            <a href="#" className="hover:text-gold transition-colors">Contact</a>
+            <a href="#prayers" className="hover:text-gold transition-colors">{t("footer.prayerTimes")}</a>
+            <a href="#qibla" className="hover:text-gold transition-colors">{t("footer.qibla")}</a>
+            <a href="#features" className="hover:text-gold transition-colors">{t("footer.features")}</a>
+            <a href="#" className="hover:text-gold transition-colors">{t("footer.about")}</a>
+            <a href="#" className="hover:text-gold transition-colors">{t("footer.contact")}</a>
           </div>
 
           {/* Divider */}
@@ -40,7 +43,7 @@ const Footer = () => {
 
           {/* Copyright */}
           <p className="text-sm text-primary-foreground/60 flex items-center gap-1">
-            Made with <Heart className="w-4 h-4 text-gold fill-gold" /> for the Ummah
+            {t("footer.madeWith")} <Heart className="w-4 h-4 text-gold fill-gold" /> {t("footer.forUmmah")}
           </p>
           <p className="text-xs text-primary-foreground/40 mt-2">
             © 2026 Muslim al Muslim. All rights reserved.

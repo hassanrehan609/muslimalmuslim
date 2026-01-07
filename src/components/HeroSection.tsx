@@ -2,8 +2,11 @@ import { Moon, Star, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import AIChatSearch from "./AIChatSearch";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const HeroSection = () => {
+  const { t } = useLanguage();
+
   return (
     <section className="relative min-h-screen hero-gradient islamic-pattern overflow-hidden">
       {/* Decorative elements */}
@@ -39,7 +42,7 @@ const HeroSection = () => {
 
           {/* Title */}
           <h1 className="text-4xl md:text-6xl font-bold text-primary-foreground mb-4 animate-fade-in" style={{ animationDelay: "0.4s" }}>
-            Muslim al Muslim
+            {t("hero.title")}
           </h1>
           
           <p className="text-xl md:text-2xl font-arabic text-gold mb-6 animate-fade-in" style={{ animationDelay: "0.5s" }}>
@@ -48,7 +51,7 @@ const HeroSection = () => {
 
           {/* Subtitle */}
           <p className="text-lg md:text-xl text-primary-foreground/80 mb-10 max-w-xl animate-fade-in" style={{ animationDelay: "0.6s" }}>
-            Your complete Islamic companion for prayer times, Quran, Qibla direction, and daily spiritual guidance.
+            {t("hero.subtitle")}
           </p>
 
           {/* AI Chat Search */}
@@ -58,12 +61,12 @@ const HeroSection = () => {
           <div className="flex flex-col sm:flex-row gap-4 mt-6 animate-fade-in" style={{ animationDelay: "0.9s" }}>
             <Link to="/quran">
               <Button variant="gold" size="xl">
-                Read Quran
+                {t("hero.readQuran")}
               </Button>
             </Link>
             <a href="#features">
               <Button variant="glass" size="xl" className="text-primary-foreground border-primary-foreground/30">
-                Explore Features
+                {t("hero.exploreFeatures")}
               </Button>
             </a>
           </div>

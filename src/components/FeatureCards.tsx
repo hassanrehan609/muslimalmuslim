@@ -1,28 +1,31 @@
 import { BookOpen, Heart, Fingerprint, Star, Calendar, Bookmark, Bot, BookText, Moon } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Link } from "react-router-dom";
-
-const features = [
-  { icon: BookOpen, title: "Holy Quran", arabic: "القرآن الكريم", description: "Read, listen, and explore the complete Quran with translations.", link: "/quran" },
-  { icon: Heart, title: "Daily Duas", arabic: "الأدعية اليومية", description: "Collection of essential duas for every moment.", link: "/duas" },
-  { icon: Fingerprint, title: "Tasbeeh Counter", arabic: "المسبحة", description: "Digital tasbeeh to track your dhikr.", link: "/tasbeeh" },
-  { icon: Star, title: "99 Names of Allah", arabic: "أسماء الله الحسنى", description: "Learn the beautiful names of Allah.", link: "/names-of-allah" },
-  { icon: Calendar, title: "Islamic Calendar", arabic: "التقويم الهجري", description: "Hijri calendar with important dates.", link: "/calendar" },
-  { icon: Bookmark, title: "My Favorites", arabic: "المفضلة", description: "Quick access to saved items.", link: "/favorites" },
-  { icon: Bot, title: "AI Islamic Chat", arabic: "المحادثة الإسلامية", description: "Ask questions about Islam, Quran & Hadith.", link: "/chatbot" },
-  { icon: BookText, title: "Six Kalmas", arabic: "الکلمات الستة", description: "Learn and recite the six kalmas.", link: "/kalmas" },
-  { icon: Moon, title: "Namaz Guide", arabic: "دليل الصلاة", description: "Complete guide to perform Salah.", link: "/namaz" },
-];
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const FeatureCards = () => {
+  const { t } = useLanguage();
+
+  const features = [
+    { icon: BookOpen, titleKey: "feature.quran", arabic: "القرآن الكريم", descKey: "feature.quran.desc", link: "/quran" },
+    { icon: Heart, titleKey: "feature.duas", arabic: "الأدعية اليومية", descKey: "feature.duas.desc", link: "/duas" },
+    { icon: Fingerprint, titleKey: "feature.tasbeeh", arabic: "المسبحة", descKey: "feature.tasbeeh.desc", link: "/tasbeeh" },
+    { icon: Star, titleKey: "feature.names", arabic: "أسماء الله الحسنى", descKey: "feature.names.desc", link: "/names-of-allah" },
+    { icon: Calendar, titleKey: "feature.calendar", arabic: "التقويم الهجري", descKey: "feature.calendar.desc", link: "/calendar" },
+    { icon: Bookmark, titleKey: "feature.favorites", arabic: "المفضلة", descKey: "feature.favorites.desc", link: "/favorites" },
+    { icon: Bot, titleKey: "feature.chat", arabic: "المحادثة الإسلامية", descKey: "feature.chat.desc", link: "/chatbot" },
+    { icon: BookText, titleKey: "feature.kalmas", arabic: "الکلمات الستة", descKey: "feature.kalmas.desc", link: "/kalmas" },
+    { icon: Moon, titleKey: "feature.namaz", arabic: "دليل الصلاة", descKey: "feature.namaz.desc", link: "/namaz" },
+  ];
+
   return (
     <section id="features" className="py-20 bg-background">
       <div className="container mx-auto px-4">
         <div className="text-center mb-12">
           <p className="text-gold font-arabic text-xl mb-2">المميزات</p>
-          <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">Features</h2>
+          <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">{t("features.title")}</h2>
           <p className="text-muted-foreground max-w-xl mx-auto">
-            Everything you need for your spiritual journey, beautifully designed and easy to use.
+            {t("features.subtitle")}
           </p>
         </div>
 
@@ -42,16 +45,16 @@ const FeatureCards = () => {
                   {feature.arabic}
                 </p>
                 <h3 className="text-xl font-semibold mb-2 text-foreground group-hover:text-primary-foreground transition-colors">
-                  {feature.title}
+                  {t(feature.titleKey)}
                 </h3>
                 <p className="text-muted-foreground group-hover:text-primary-foreground/80 transition-colors">
-                  {feature.description}
+                  {t(feature.descKey)}
                 </p>
               </Card>
             );
             
             return (
-              <Link key={feature.title} to={feature.link}>
+              <Link key={feature.titleKey} to={feature.link}>
                 {cardContent}
               </Link>
             );
