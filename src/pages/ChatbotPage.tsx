@@ -66,13 +66,22 @@ const ChatbotPage = () => {
         body: JSON.stringify({ messages: [...messages, userMessage] }),
       });
 
-      if (!response.ok || !response.body) {
-        throw new Error("Failed to get response");
+      if (!response.ok) {
+        const errorData = await response.text();
+        console.error("Response error:", response.status, errorData);
+        throw new Error(`Server error: ${response.status}`);
+      }
+
+      if (!response.body) {
+        throw new Error("No response body");
       }
 
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
       let buffer = "";
+
+      // Add assistant message placeholder immediately
+      setMessages(prev => [...prev, { role: "assistant", content: "" }]);
 
       while (true) {
         const { done, value } = await reader.read();
@@ -98,27 +107,35 @@ const ChatbotPage = () => {
             if (deltaContent) {
               assistantContent += deltaContent;
               setMessages(prev => {
-                const last = prev[prev.length - 1];
-                if (last?.role === "assistant" && prev.length > 1) {
-                  return prev.map((m, i) => 
-                    i === prev.length - 1 ? { ...m, content: assistantContent } : m
-                  );
-                }
-                return [...prev, { role: "assistant", content: assistantContent }];
+                return prev.map((m, i) => 
+                  i === prev.length - 1 ? { ...m, content: assistantContent } : m
+                );
               });
             }
           } catch {
+            // Incomplete JSON, keep in buffer and continue
             buffer = line + "\n" + buffer;
             break;
           }
         }
       }
+
+      // Ensure final content is set
+      if (assistantContent) {
+        setMessages(prev => prev.map((m, i) => 
+          i === prev.length - 1 ? { ...m, content: assistantContent } : m
+        ));
+      }
     } catch (error) {
       console.error("Chat error:", error);
-      setMessages(prev => [
-        ...prev,
-        { role: "assistant", content: "I apologize, but I encountered an error. Please try again later." }
-      ]);
+      setMessages(prev => {
+        // Remove empty assistant placeholder if exists
+        const filtered = prev.filter((m, i) => !(i === prev.length - 1 && m.role === "assistant" && !m.content));
+        return [
+          ...filtered,
+          { role: "assistant", content: "I apologize, but I encountered an error. Please try again in a moment." }
+        ];
+      });
     } finally {
       setIsLoading(false);
     }
