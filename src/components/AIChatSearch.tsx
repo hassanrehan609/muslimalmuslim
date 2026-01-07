@@ -1,16 +1,17 @@
 import { useState } from "react";
-import { Search, MessageCircle, Send, Loader2 } from "lucide-react";
+import { MessageCircle, Send } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const AIChatSearch = () => {
   const [query, setQuery] = useState("");
   const [isFocused, setIsFocused] = useState(false);
   const navigate = useNavigate();
+  const { t, language } = useLanguage();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (query.trim()) {
-      // Navigate to chatbot with the query
       navigate(`/chatbot?q=${encodeURIComponent(query.trim())}`);
     }
   };
@@ -20,6 +21,10 @@ const AIChatSearch = () => {
       handleSubmit(e);
     }
   };
+
+  const suggestions = language === "ur" 
+    ? ["نماز کیسے پڑھیں؟", "ہدایت کی دعا", "رمضان کے احکام", "زکوٰۃ کا حساب"]
+    : ["How to pray?", "Dua for guidance", "Ramadan rules", "Zakat calculation"];
 
   return (
     <div className="w-full max-w-xl mx-auto animate-fade-in" style={{ animationDelay: "0.7s" }}>
@@ -43,8 +48,9 @@ const AIChatSearch = () => {
             onFocus={() => setIsFocused(true)}
             onBlur={() => setIsFocused(false)}
             onKeyDown={handleKeyDown}
-            placeholder="Ask any Islamic question..."
+            placeholder={t("hero.askQuestion")}
             className="flex-1 bg-transparent text-white placeholder:text-white/60 outline-none text-base"
+            dir={language === "ur" ? "rtl" : "ltr"}
           />
           <button
             type="submit"
@@ -67,7 +73,7 @@ const AIChatSearch = () => {
 
       {/* Quick suggestions */}
       <div className="flex flex-wrap justify-center gap-2 mt-4">
-        {["How to pray?", "Dua for guidance", "Ramadan rules", "Zakat calculation"].map((suggestion) => (
+        {suggestions.map((suggestion) => (
           <button
             key={suggestion}
             onClick={() => navigate(`/chatbot?q=${encodeURIComponent(suggestion)}`)}

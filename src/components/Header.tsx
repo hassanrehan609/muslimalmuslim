@@ -1,10 +1,16 @@
-import { Moon, Star, Heart, Bell, Menu, X } from "lucide-react";
+import { Moon, Star, Heart, Bell, Menu, X, LogOut } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useState } from "react";
 import ThemeToggle from "./ThemeToggle";
+import LanguageToggle from "./LanguageToggle";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { useAuth } from "@/hooks/useAuth";
+import { Button } from "@/components/ui/button";
 
 const Header = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { t, language } = useLanguage();
+  const { signOut } = useAuth();
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b border-border/50">
@@ -22,19 +28,35 @@ const Header = () => {
         
         <div className="flex items-center gap-4">
           <nav className="hidden md:flex items-center gap-6">
-            <Link to="/quran" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors">Quran</Link>
-            <Link to="/duas" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors">Duas</Link>
-            <Link to="/calendar" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors">Calendar</Link>
+            <Link to="/quran" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors">
+              {t("nav.quran")}
+            </Link>
+            <Link to="/duas" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors">
+              {t("nav.duas")}
+            </Link>
+            <Link to="/calendar" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors">
+              {t("nav.calendar")}
+            </Link>
             <Link to="/adhan-settings" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors flex items-center gap-1">
               <Bell className="w-4 h-4" />
-              Adhan
+              {t("nav.adhan")}
             </Link>
             <Link to="/favorites" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors flex items-center gap-1">
               <Heart className="w-4 h-4" />
-              Favorites
+              {t("nav.favorites")}
             </Link>
           </nav>
+          <LanguageToggle />
           <ThemeToggle />
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={signOut}
+            className="h-9 w-9 rounded-lg text-destructive hover:text-destructive"
+            aria-label="Logout"
+          >
+            <LogOut className="h-5 w-5" />
+          </Button>
           
           {/* Mobile menu button */}
           <button 
@@ -55,35 +77,35 @@ const Header = () => {
               className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors py-2"
               onClick={() => setMobileMenuOpen(false)}
             >
-              Quran
+              {t("nav.quran")}
             </Link>
             <Link 
               to="/duas" 
               className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors py-2"
               onClick={() => setMobileMenuOpen(false)}
             >
-              Duas
+              {t("nav.duas")}
             </Link>
             <Link 
               to="/calendar" 
               className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors py-2"
               onClick={() => setMobileMenuOpen(false)}
             >
-              Calendar
+              {t("nav.calendar")}
             </Link>
             <Link 
               to="/names-of-allah" 
               className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors py-2"
               onClick={() => setMobileMenuOpen(false)}
             >
-              99 Names
+              {t("nav.names")}
             </Link>
             <Link 
               to="/tasbeeh" 
               className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors py-2"
               onClick={() => setMobileMenuOpen(false)}
             >
-              Tasbeeh
+              {t("nav.tasbeeh")}
             </Link>
             <Link 
               to="/adhan-settings" 
@@ -91,7 +113,7 @@ const Header = () => {
               onClick={() => setMobileMenuOpen(false)}
             >
               <Bell className="w-4 h-4" />
-              Adhan Settings
+              {t("nav.adhanSettings")}
             </Link>
             <Link 
               to="/favorites" 
@@ -99,8 +121,15 @@ const Header = () => {
               onClick={() => setMobileMenuOpen(false)}
             >
               <Heart className="w-4 h-4" />
-              Favorites
+              {t("nav.favorites")}
             </Link>
+            <button
+              onClick={() => { signOut(); setMobileMenuOpen(false); }}
+              className="text-sm font-medium text-destructive hover:text-destructive/80 transition-colors py-2 flex items-center gap-2"
+            >
+              <LogOut className="w-4 h-4" />
+              {language === "ur" ? "لاگ آؤٹ" : "Logout"}
+            </button>
           </div>
         </nav>
       )}

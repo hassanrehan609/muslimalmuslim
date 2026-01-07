@@ -2,9 +2,11 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { useServiceWorker } from "./hooks/useServiceWorker";
 import { usePrayerNotifications } from "./hooks/usePrayerNotifications";
+import { LanguageProvider } from "./contexts/LanguageContext";
+import { useAuth } from "./hooks/useAuth";
 import Index from "./pages/Index";
 import DuasPage from "./pages/DuasPage";
 import NamesOfAllahPage from "./pages/NamesOfAllahPage";
@@ -21,9 +23,28 @@ import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
+// Protected Route component
+const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
+  const { user, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gold"></div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <Navigate to="/auth" replace />;
+  }
+
+  return <>{children}</>;
+};
+
 const AppContent = () => {
   const { isOnline } = useServiceWorker();
-  usePrayerNotifications(); // Initialize prayer notifications
+  usePrayerNotifications();
 
   return (
     <>
@@ -34,18 +55,18 @@ const AppContent = () => {
       )}
       <div className={!isOnline ? "pt-10" : ""}>
         <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/duas" element={<DuasPage />} />
-          <Route path="/names-of-allah" element={<NamesOfAllahPage />} />
-          <Route path="/tasbeeh" element={<TasbeehPage />} />
-          <Route path="/quran" element={<QuranPage />} />
-          <Route path="/calendar" element={<HijriCalendarPage />} />
-          <Route path="/favorites" element={<FavoritesPage />} />
-          <Route path="/adhan-settings" element={<AdhanSettingsPage />} />
           <Route path="/auth" element={<AuthPage />} />
-          <Route path="/chatbot" element={<ChatbotPage />} />
-          <Route path="/kalmas" element={<KalmasPage />} />
-          <Route path="/namaz" element={<NamazPage />} />
+          <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
+          <Route path="/duas" element={<ProtectedRoute><DuasPage /></ProtectedRoute>} />
+          <Route path="/names-of-allah" element={<ProtectedRoute><NamesOfAllahPage /></ProtectedRoute>} />
+          <Route path="/tasbeeh" element={<ProtectedRoute><TasbeehPage /></ProtectedRoute>} />
+          <Route path="/quran" element={<ProtectedRoute><QuranPage /></ProtectedRoute>} />
+          <Route path="/calendar" element={<ProtectedRoute><HijriCalendarPage /></ProtectedRoute>} />
+          <Route path="/favorites" element={<ProtectedRoute><FavoritesPage /></ProtectedRoute>} />
+          <Route path="/adhan-settings" element={<ProtectedRoute><AdhanSettingsPage /></ProtectedRoute>} />
+          <Route path="/chatbot" element={<ProtectedRoute><ChatbotPage /></ProtectedRoute>} />
+          <Route path="/kalmas" element={<ProtectedRoute><KalmasPage /></ProtectedRoute>} />
+          <Route path="/namaz" element={<ProtectedRoute><NamazPage /></ProtectedRoute>} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </div>
@@ -55,13 +76,15 @@ const AppContent = () => {
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <AppContent />
-      </BrowserRouter>
-    </TooltipProvider>
+    <LanguageProvider>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <AppContent />
+        </BrowserRouter>
+      </TooltipProvider>
+    </LanguageProvider>
   </QueryClientProvider>
 );
 
