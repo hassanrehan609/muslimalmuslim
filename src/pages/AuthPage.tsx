@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Moon, Star, Phone, User, ArrowRight, ArrowLeft, Eye, EyeOff } from "lucide-react";
+import { Moon, Star, Phone, User, ArrowRight, ArrowLeft, Eye, EyeOff, KeyRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -11,7 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
 import LanguageToggle from "@/components/LanguageToggle";
 
-type AuthMode = "login" | "signup";
+type AuthMode = "login" | "signup" | "forgot";
 type Denomination = "sunni" | "shia" | "hanafi";
 
 const AuthPage = () => {
@@ -23,6 +23,7 @@ const AuthPage = () => {
   const [denomination, setDenomination] = useState<Denomination>("sunni");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [resetSent, setResetSent] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
   const { t, language } = useLanguage();
@@ -110,6 +111,41 @@ const AuthPage = () => {
     }
   };
 
+  const handleForgotPassword = async () => {
+    if (!phone) {
+      toast({ 
+        title: language === "ur" ? "خرابی" : "Error", 
+        description: language === "ur" ? "فون نمبر درج کریں" : "Please enter your phone number", 
+        variant: "destructive" 
+      });
+      return;
+    }
+    
+    setLoading(true);
+    try {
+      const email = formatPhoneAsEmail(phone);
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/auth?mode=reset`,
+      });
+      
+      if (error) throw error;
+      
+      setResetSent(true);
+      toast({ 
+        title: language === "ur" ? "کامیاب" : "Success", 
+        description: language === "ur" ? "پاس ورڈ ری سیٹ کی ہدایات آپ کے فون پر بھیج دی گئیں (اگر اکاؤنٹ موجود ہے)" : "Password reset instructions sent (if account exists)" 
+      });
+    } catch (error: any) {
+      toast({ 
+        title: language === "ur" ? "خرابی" : "Error", 
+        description: error.message, 
+        variant: "destructive" 
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <Card className="w-full max-w-md p-8 bg-card border-border">
@@ -130,7 +166,61 @@ const AuthPage = () => {
           </div>
         </div>
 
-        {mode === "login" ? (
+        {mode === "forgot" ? (
+          <div className="space-y-6">
+            <div className="text-center">
+              <KeyRound className="w-12 h-12 text-gold mx-auto mb-4" />
+              <h2 className="text-xl font-semibold text-foreground">{t("auth.resetPassword")}</h2>
+              <p className="text-muted-foreground">{t("auth.resetSubtitle")}</p>
+            </div>
+
+            {!resetSent ? (
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="resetPhone">{t("auth.accountNumber")}</Label>
+                  <div className="relative">
+                    <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <Input
+                      id="resetPhone"
+                      type="tel"
+                      placeholder="+92 300 1234567"
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                      className="pl-10"
+                      dir="ltr"
+                    />
+                  </div>
+                </div>
+
+                <Button onClick={handleForgotPassword} disabled={loading} className="w-full bg-gold hover:bg-gold/90 text-gold-foreground">
+                  {loading ? t("auth.sending") : t("auth.sendResetLink")}
+                </Button>
+              </div>
+            ) : (
+              <div className="text-center p-6 bg-gold/10 rounded-lg">
+                <p className="text-foreground mb-2">
+                  {language === "ur" 
+                    ? "اگر یہ فون نمبر رجسٹرڈ ہے تو آپ کو پاس ورڈ ری سیٹ کی ہدایات موصول ہوں گی۔" 
+                    : "If this phone number is registered, you will receive password reset instructions."}
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  {language === "ur" 
+                    ? "براہ کرم اپنے فون کے پیغامات چیک کریں۔" 
+                    : "Please check your messages."}
+                </p>
+              </div>
+            )}
+
+            <p className="text-center">
+              <button 
+                onClick={() => { setMode("login"); setResetSent(false); setPhone(""); }} 
+                className="text-gold hover:underline"
+              >
+                {t("auth.backToLogin")}
+              </button>
+            </p>
+          </div>
+        ) : mode === "login" ? (
           <div className="space-y-6">
             <div className="text-center">
               <h2 className="text-xl font-semibold text-foreground">{t("auth.welcomeBack")}</h2>
@@ -155,7 +245,15 @@ const AuthPage = () => {
               </div>
 
               <div>
-                <Label htmlFor="password">{t("auth.password")}</Label>
+                <div className="flex items-center justify-between mb-1">
+                  <Label htmlFor="password">{t("auth.password")}</Label>
+                  <button 
+                    onClick={() => setMode("forgot")} 
+                    className="text-xs text-gold hover:underline"
+                  >
+                    {t("auth.forgotPassword")}
+                  </button>
+                </div>
                 <div className="relative">
                   <Input
                     id="password"
