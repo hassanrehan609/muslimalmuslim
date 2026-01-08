@@ -1,4 +1,4 @@
-import { Moon, Star, Heart, Bell, Menu, X, LogOut } from "lucide-react";
+import { Moon, Star, Heart, Bell, Menu, X, LogOut, User } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useState } from "react";
 import ThemeToggle from "./ThemeToggle";
@@ -44,6 +44,10 @@ const Header = () => {
             <Link to="/favorites" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors flex items-center gap-1">
               <Heart className="w-4 h-4" />
               {t("nav.favorites")}
+            </Link>
+            <Link to="/profile" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors flex items-center gap-1">
+              <User className="w-4 h-4" />
+              {t("nav.profile")}
             </Link>
           </nav>
           <LanguageToggle />

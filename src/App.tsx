@@ -19,6 +19,7 @@ import AuthPage from "./pages/AuthPage";
 import ChatbotPage from "./pages/ChatbotPage";
 import KalmasPage from "./pages/KalmasPage";
 import NamazPage from "./pages/NamazPage";
+import ProfilePage from "./pages/ProfilePage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -67,6 +68,7 @@ const AppContent = () => {
           <Route path="/chatbot" element={<ProtectedRoute><ChatbotPage /></ProtectedRoute>} />
           <Route path="/kalmas" element={<ProtectedRoute><KalmasPage /></ProtectedRoute>} />
           <Route path="/namaz" element={<ProtectedRoute><NamazPage /></ProtectedRoute>} />
+          <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </div>
