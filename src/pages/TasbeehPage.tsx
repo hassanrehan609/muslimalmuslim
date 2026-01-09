@@ -3,15 +3,16 @@ import { ArrowLeft, RotateCcw, Target, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useState, useCallback } from "react";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const presetTargets = [33, 99, 100, 500, 1000];
 
 const dhikrPhrases = [
-  { arabic: "سُبْحَانَ اللَّهِ", transliteration: "SubhanAllah", meaning: "Glory be to Allah" },
-  { arabic: "الْحَمْدُ لِلَّهِ", transliteration: "Alhamdulillah", meaning: "All praise is due to Allah" },
-  { arabic: "اللَّهُ أَكْبَرُ", transliteration: "Allahu Akbar", meaning: "Allah is the Greatest" },
-  { arabic: "لَا إِلَهَ إِلَّا اللَّهُ", transliteration: "La ilaha illallah", meaning: "There is no god but Allah" },
-  { arabic: "أَسْتَغْفِرُ اللَّهَ", transliteration: "Astaghfirullah", meaning: "I seek forgiveness from Allah" },
+  { arabic: "سُبْحَانَ اللَّهِ", transliteration: "SubhanAllah", meaning: "Glory be to Allah", meaningUrdu: "اللہ پاک ہے" },
+  { arabic: "الْحَمْدُ لِلَّهِ", transliteration: "Alhamdulillah", meaning: "All praise is due to Allah", meaningUrdu: "تمام تعریفیں اللہ کے لیے ہیں" },
+  { arabic: "اللَّهُ أَكْبَرُ", transliteration: "Allahu Akbar", meaning: "Allah is the Greatest", meaningUrdu: "اللہ سب سے بڑا ہے" },
+  { arabic: "لَا إِلَهَ إِلَّا اللَّهُ", transliteration: "La ilaha illallah", meaning: "There is no god but Allah", meaningUrdu: "اللہ کے سوا کوئی معبود نہیں" },
+  { arabic: "أَسْتَغْفِرُ اللَّهَ", transliteration: "Astaghfirullah", meaning: "I seek forgiveness from Allah", meaningUrdu: "میں اللہ سے معافی مانگتا ہوں" },
 ];
 
 const TasbeehPage = () => {
@@ -20,6 +21,7 @@ const TasbeehPage = () => {
   const [customTarget, setCustomTarget] = useState("");
   const [selectedDhikr, setSelectedDhikr] = useState(0);
   const [showCompleted, setShowCompleted] = useState(false);
+  const { t, language } = useLanguage();
 
   const handleCount = useCallback(() => {
     if (count < target) {
@@ -63,8 +65,8 @@ const TasbeehPage = () => {
             <ArrowLeft className="w-5 h-5 text-foreground" />
           </Link>
           <div>
-            <h1 className="text-xl font-bold text-foreground">Tasbeeh Counter</h1>
-            <p className="text-xs text-muted-foreground font-arabic">المسبحة</p>
+            <h1 className="text-xl font-bold text-foreground">{t("page.tasbeeh")}</h1>
+            <p className="text-xs text-muted-foreground font-arabic">{t("page.tasbeehArabic")}</p>
           </div>
         </div>
       </header>
@@ -72,7 +74,7 @@ const TasbeehPage = () => {
       <main className="container mx-auto px-4 py-8 max-w-2xl">
         {/* Dhikr Selection */}
         <div className="mb-8">
-          <p className="text-sm font-medium text-muted-foreground mb-3 text-center">Select Dhikr</p>
+          <p className="text-sm font-medium text-muted-foreground mb-3 text-center">{t("tasbeeh.selectDhikr")}</p>
           <div className="flex flex-wrap justify-center gap-2">
             {dhikrPhrases.map((dhikr, index) => (
               <button
@@ -99,7 +101,7 @@ const TasbeehPage = () => {
             {currentDhikr.arabic}
           </p>
           <p className="text-xl font-semibold text-gold mb-2">{currentDhikr.transliteration}</p>
-          <p className="text-muted-foreground">{currentDhikr.meaning}</p>
+          <p className="text-muted-foreground">{language === "ur" ? currentDhikr.meaningUrdu : currentDhikr.meaning}</p>
         </Card>
 
         {/* Counter Display */}
@@ -141,13 +143,13 @@ const TasbeehPage = () => {
               {showCompleted ? (
                 <>
                   <Check className="w-12 h-12 mb-2" />
-                  <span className="text-lg font-semibold">Complete!</span>
+                  <span className="text-lg font-semibold">{t("tasbeeh.complete")}</span>
                 </>
               ) : (
                 <>
                   <span className="text-5xl font-bold">{count}</span>
-                  <span className="text-sm opacity-80">of {target}</span>
-                  <span className="text-xs mt-2 opacity-60">Tap to count</span>
+                  <span className="text-sm opacity-80">{t("common.of")} {target}</span>
+                  <span className="text-xs mt-2 opacity-60">{t("tasbeeh.tapToCount")}</span>
                 </>
               )}
             </button>
@@ -163,7 +165,7 @@ const TasbeehPage = () => {
             className="gap-2"
           >
             <RotateCcw className="w-4 h-4" />
-            Reset Counter
+            {t("tasbeeh.reset")}
           </Button>
         </div>
 
@@ -171,7 +173,7 @@ const TasbeehPage = () => {
         <Card className="p-6 bg-card border-border/50">
           <div className="flex items-center gap-2 mb-4">
             <Target className="w-5 h-5 text-gold" />
-            <h3 className="font-semibold text-foreground">Set Target</h3>
+            <h3 className="font-semibold text-foreground">{t("tasbeeh.setTarget")}</h3>
           </div>
 
           <div className="flex flex-wrap gap-2 mb-4">
@@ -193,14 +195,14 @@ const TasbeehPage = () => {
           <div className="flex gap-2">
             <input
               type="number"
-              placeholder="Custom target..."
+              placeholder={t("tasbeeh.customTarget")}
               value={customTarget}
               onChange={(e) => setCustomTarget(e.target.value)}
               className="flex-1 px-4 py-2 rounded-lg bg-muted text-foreground border border-border focus:outline-none focus:ring-2 focus:ring-primary"
               min="1"
             />
             <Button onClick={handleCustomTargetSubmit} disabled={!customTarget}>
-              Set
+              {t("tasbeeh.set")}
             </Button>
           </div>
         </Card>

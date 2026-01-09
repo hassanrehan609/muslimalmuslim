@@ -5,6 +5,7 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 type Message = {
   role: "user" | "assistant";
@@ -14,11 +15,18 @@ type Message = {
 const ChatbotPage = () => {
   const [searchParams] = useSearchParams();
   const initialQuery = searchParams.get("q") || "";
+  const { t, language } = useLanguage();
+  
+  const getWelcomeMessage = () => {
+    return language === "ur"
+      ? "السلام علیکم! میں آپ کا اسلامی علم کا معاون ہوں۔ اسلام، قرآن، حدیث، نماز، یا روزانہ اسلامی معاملات کے بارے میں کوئی بھی سوال پوچھیں۔ میں آپ کی کیسے مدد کر سکتا ہوں؟"
+      : "Assalamu Alaikum! I am your Islamic knowledge assistant. Feel free to ask me any questions about Islam, Quran, Hadith, prayers, or daily Islamic practices. How can I help you today?";
+  };
   
   const [messages, setMessages] = useState<Message[]>([
     {
       role: "assistant",
-      content: "Assalamu Alaikum! I am your Islamic knowledge assistant. Feel free to ask me any questions about Islam, Quran, Hadith, prayers, or daily Islamic practices. How can I help you today?"
+      content: getWelcomeMessage()
     }
   ]);
   const [input, setInput] = useState("");
@@ -133,7 +141,9 @@ const ChatbotPage = () => {
         const filtered = prev.filter((m, i) => !(i === prev.length - 1 && m.role === "assistant" && !m.content));
         return [
           ...filtered,
-          { role: "assistant", content: "I apologize, but I encountered an error. Please try again in a moment." }
+          { role: "assistant", content: language === "ur" 
+            ? "معذرت، کوئی خرابی ہوئی۔ براہ کرم دوبارہ کوشش کریں۔" 
+            : "I apologize, but I encountered an error. Please try again in a moment." }
         ];
       });
     } finally {
@@ -166,8 +176,12 @@ const ChatbotPage = () => {
             <Bot className="w-6 h-6 text-gold" />
           </div>
           <div>
-            <h1 className="font-semibold">Islamic AI Assistant</h1>
-            <p className="text-xs text-primary-foreground/70">Ask about Islam, Quran & Hadith</p>
+            <h1 className="font-semibold">
+              {language === "ur" ? "اسلامی AI معاون" : "Islamic AI Assistant"}
+            </h1>
+            <p className="text-xs text-primary-foreground/70">
+              {language === "ur" ? "اسلام، قرآن اور حدیث کے بارے میں پوچھیں" : "Ask about Islam, Quran & Hadith"}
+            </p>
           </div>
         </div>
       </header>
@@ -218,7 +232,7 @@ const ChatbotPage = () => {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyPress={handleKeyPress}
-            placeholder="Ask about Islam, Quran, prayers..."
+            placeholder={language === "ur" ? "اسلام، قرآن، نماز کے بارے میں پوچھیں..." : "Ask about Islam, Quran, prayers..."}
             className="flex-1"
             disabled={isLoading}
           />
