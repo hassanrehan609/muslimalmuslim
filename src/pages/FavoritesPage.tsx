@@ -5,9 +5,11 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useFavorites, FavoriteItem } from "@/hooks/useFavorites";
 import { toast } from "sonner";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const FavoritesPage = () => {
   const { favorites, removeFavorite, getFavoritesByType } = useFavorites();
+  const { t, language } = useLanguage();
   
   const duaFavorites = getFavoritesByType("dua");
   const nameFavorites = getFavoritesByType("name");
@@ -15,15 +17,19 @@ const FavoritesPage = () => {
 
   const handleRemove = (item: FavoriteItem) => {
     removeFavorite(item.id);
-    toast.success("Removed from favorites");
+    toast.success(language === "ur" ? "پسندیدہ سے ہٹا دیا گیا" : "Removed from favorites");
   };
 
-  const renderEmptyState = (type: string) => (
+  const renderEmptyState = (type: string, typeUrdu: string) => (
     <div className="text-center py-12">
       <Heart className="w-12 h-12 text-muted-foreground/30 mx-auto mb-4" />
-      <h3 className="text-lg font-medium text-foreground mb-2">No {type} saved yet</h3>
+      <h3 className="text-lg font-medium text-foreground mb-2">
+        {language === "ur" ? `ابھی تک کوئی ${typeUrdu} محفوظ نہیں` : `No ${type} saved yet`}
+      </h3>
       <p className="text-muted-foreground text-sm">
-        Tap the heart icon on any {type.toLowerCase()} to save it here for quick access.
+        {language === "ur" 
+          ? `کسی بھی ${typeUrdu} کو یہاں محفوظ کرنے کے لیے دل کے آئیکن پر ٹچ کریں۔`
+          : `Tap the heart icon on any ${type.toLowerCase()} to save it here for quick access.`}
       </p>
     </div>
   );
@@ -124,12 +130,12 @@ const FavoritesPage = () => {
             <ArrowLeft className="w-5 h-5 text-foreground" />
           </Link>
           <div>
-            <h1 className="text-xl font-bold text-foreground">Favorites</h1>
-            <p className="text-xs text-muted-foreground font-arabic">المفضلة</p>
+            <h1 className="text-xl font-bold text-foreground">{t("page.favorites")}</h1>
+            <p className="text-xs text-muted-foreground font-arabic">{t("page.favoritesArabic")}</p>
           </div>
           <div className="ml-auto">
             <span className="text-sm text-muted-foreground">
-              {favorites.length} saved
+              {favorites.length} {t("favorites.saved")}
             </span>
           </div>
         </div>
@@ -138,29 +144,29 @@ const FavoritesPage = () => {
       <main className="container mx-auto px-4 py-8 max-w-4xl">
         <Tabs defaultValue="all" className="w-full">
           <TabsList className="grid w-full grid-cols-4 mb-6">
-            <TabsTrigger value="all">All ({favorites.length})</TabsTrigger>
-            <TabsTrigger value="duas">Duas ({duaFavorites.length})</TabsTrigger>
-            <TabsTrigger value="names">Names ({nameFavorites.length})</TabsTrigger>
-            <TabsTrigger value="verses">Verses ({verseFavorites.length})</TabsTrigger>
+            <TabsTrigger value="all">{t("favorites.all")} ({favorites.length})</TabsTrigger>
+            <TabsTrigger value="duas">{t("favorites.duas")} ({duaFavorites.length})</TabsTrigger>
+            <TabsTrigger value="names">{t("favorites.names")} ({nameFavorites.length})</TabsTrigger>
+            <TabsTrigger value="verses">{t("favorites.verses")} ({verseFavorites.length})</TabsTrigger>
           </TabsList>
 
           <TabsContent value="all">
             {favorites.length === 0 ? (
               <div className="text-center py-12">
                 <Heart className="w-12 h-12 text-muted-foreground/30 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-foreground mb-2">No favorites yet</h3>
+                <h3 className="text-lg font-medium text-foreground mb-2">{t("favorites.noFavorites")}</h3>
                 <p className="text-muted-foreground text-sm mb-4">
-                  Start exploring and save your favorite duas, names of Allah, and Quran verses.
+                  {t("favorites.startExploring")}
                 </p>
                 <div className="flex flex-wrap justify-center gap-2">
                   <Link to="/duas">
-                    <Button variant="outline">Browse Duas</Button>
+                    <Button variant="outline">{t("favorites.browseDuas")}</Button>
                   </Link>
                   <Link to="/names-of-allah">
-                    <Button variant="outline">99 Names</Button>
+                    <Button variant="outline">{t("favorites.99Names")}</Button>
                   </Link>
                   <Link to="/quran">
-                    <Button variant="outline">Holy Quran</Button>
+                    <Button variant="outline">{t("favorites.holyQuran")}</Button>
                   </Link>
                 </div>
               </div>
@@ -178,21 +184,21 @@ const FavoritesPage = () => {
 
           <TabsContent value="duas">
             {duaFavorites.length === 0 
-              ? renderEmptyState("Duas")
+              ? renderEmptyState("Duas", "دعائیں")
               : <div className="space-y-4">{duaFavorites.map(renderDuaCard)}</div>
             }
           </TabsContent>
 
           <TabsContent value="names">
             {nameFavorites.length === 0 
-              ? renderEmptyState("Names")
+              ? renderEmptyState("Names", "نام")
               : <div className="grid sm:grid-cols-2 gap-4">{nameFavorites.map(renderNameCard)}</div>
             }
           </TabsContent>
 
           <TabsContent value="verses">
             {verseFavorites.length === 0 
-              ? renderEmptyState("Verses")
+              ? renderEmptyState("Verses", "آیات")
               : <div className="space-y-4">{verseFavorites.map(renderVerseCard)}</div>
             }
           </TabsContent>

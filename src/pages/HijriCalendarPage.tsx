@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface HijriDate {
   day: string;
@@ -23,38 +24,40 @@ interface GregorianDate {
 
 interface IslamicEvent {
   name: string;
+  nameUrdu: string;
   arabic: string;
   month: number;
   day: number;
   description: string;
+  descriptionUrdu: string;
 }
 
 const islamicEvents: IslamicEvent[] = [
-  { name: "Islamic New Year", arabic: "رأس السنة الهجرية", month: 1, day: 1, description: "First day of Muharram, marking the beginning of the Islamic calendar year." },
-  { name: "Ashura", arabic: "عاشوراء", month: 1, day: 10, description: "Day of fasting commemorating various events in Islamic history." },
-  { name: "Mawlid al-Nabi", arabic: "المولد النبوي", month: 3, day: 12, description: "Birth anniversary of Prophet Muhammad (PBUH)." },
-  { name: "Isra and Mi'raj", arabic: "الإسراء والمعراج", month: 7, day: 27, description: "Night Journey and Ascension of Prophet Muhammad (PBUH)." },
-  { name: "Shab-e-Barat", arabic: "ليلة النصف من شعبان", month: 8, day: 15, description: "Night of Forgiveness and Blessings." },
-  { name: "Ramadan Begins", arabic: "بداية رمضان", month: 9, day: 1, description: "First day of the blessed month of fasting." },
-  { name: "Laylat al-Qadr", arabic: "ليلة القدر", month: 9, day: 27, description: "Night of Power - better than a thousand months." },
-  { name: "Eid al-Fitr", arabic: "عيد الفطر", month: 10, day: 1, description: "Festival of Breaking the Fast, celebrating end of Ramadan." },
-  { name: "Day of Arafah", arabic: "يوم عرفة", month: 12, day: 9, description: "Most important day of Hajj, a day of forgiveness and supplication." },
-  { name: "Eid al-Adha", arabic: "عيد الأضحى", month: 12, day: 10, description: "Festival of Sacrifice, commemorating Ibrahim's devotion." },
+  { name: "Islamic New Year", nameUrdu: "اسلامی نیا سال", arabic: "رأس السنة الهجرية", month: 1, day: 1, description: "First day of Muharram, marking the beginning of the Islamic calendar year.", descriptionUrdu: "محرم کا پہلا دن، اسلامی سال کا آغاز۔" },
+  { name: "Ashura", nameUrdu: "عاشورہ", arabic: "عاشوراء", month: 1, day: 10, description: "Day of fasting commemorating various events in Islamic history.", descriptionUrdu: "روزے کا دن جو اسلامی تاریخ کے مختلف واقعات کی یاد میں منایا جاتا ہے۔" },
+  { name: "Mawlid al-Nabi", nameUrdu: "میلاد النبی", arabic: "المولد النبوي", month: 3, day: 12, description: "Birth anniversary of Prophet Muhammad (PBUH).", descriptionUrdu: "نبی کریم ﷺ کی ولادت کا دن۔" },
+  { name: "Isra and Mi'raj", nameUrdu: "شبِ معراج", arabic: "الإسراء والمعراج", month: 7, day: 27, description: "Night Journey and Ascension of Prophet Muhammad (PBUH).", descriptionUrdu: "نبی کریم ﷺ کا معراج کا سفر۔" },
+  { name: "Shab-e-Barat", nameUrdu: "شبِ برات", arabic: "ليلة النصف من شعبان", month: 8, day: 15, description: "Night of Forgiveness and Blessings.", descriptionUrdu: "مغفرت اور برکتوں کی رات۔" },
+  { name: "Ramadan Begins", nameUrdu: "رمضان کا آغاز", arabic: "بداية رمضان", month: 9, day: 1, description: "First day of the blessed month of fasting.", descriptionUrdu: "بابرکت روزوں کے مہینے کا پہلا دن۔" },
+  { name: "Laylat al-Qadr", nameUrdu: "شبِ قدر", arabic: "ليلة القدر", month: 9, day: 27, description: "Night of Power - better than a thousand months.", descriptionUrdu: "ہزار مہینوں سے بہتر رات۔" },
+  { name: "Eid al-Fitr", nameUrdu: "عید الفطر", arabic: "عيد الفطر", month: 10, day: 1, description: "Festival of Breaking the Fast, celebrating end of Ramadan.", descriptionUrdu: "رمضان کے اختتام پر روزے کھولنے کا تہوار۔" },
+  { name: "Day of Arafah", nameUrdu: "یومِ عرفہ", arabic: "يوم عرفة", month: 12, day: 9, description: "Most important day of Hajj, a day of forgiveness and supplication.", descriptionUrdu: "حج کا سب سے اہم دن، مغفرت اور دعا کا دن۔" },
+  { name: "Eid al-Adha", nameUrdu: "عید الاضحیٰ", arabic: "عيد الأضحى", month: 12, day: 10, description: "Festival of Sacrifice, commemorating Ibrahim's devotion.", descriptionUrdu: "قربانی کا تہوار، ابراہیم علیہ السلام کی فداکاری کی یاد میں۔" },
 ];
 
 const hijriMonths = [
-  { number: 1, en: "Muharram", ar: "محرم" },
-  { number: 2, en: "Safar", ar: "صفر" },
-  { number: 3, en: "Rabi' al-Awwal", ar: "ربيع الأول" },
-  { number: 4, en: "Rabi' al-Thani", ar: "ربيع الثاني" },
-  { number: 5, en: "Jumada al-Awwal", ar: "جمادى الأولى" },
-  { number: 6, en: "Jumada al-Thani", ar: "جمادى الآخرة" },
-  { number: 7, en: "Rajab", ar: "رجب" },
-  { number: 8, en: "Sha'ban", ar: "شعبان" },
-  { number: 9, en: "Ramadan", ar: "رمضان" },
-  { number: 10, en: "Shawwal", ar: "شوال" },
-  { number: 11, en: "Dhu al-Qi'dah", ar: "ذو القعدة" },
-  { number: 12, en: "Dhu al-Hijjah", ar: "ذو الحجة" },
+  { number: 1, en: "Muharram", ar: "محرم", ur: "محرم" },
+  { number: 2, en: "Safar", ar: "صفر", ur: "صفر" },
+  { number: 3, en: "Rabi' al-Awwal", ar: "ربيع الأول", ur: "ربیع الاول" },
+  { number: 4, en: "Rabi' al-Thani", ar: "ربيع الثاني", ur: "ربیع الثانی" },
+  { number: 5, en: "Jumada al-Awwal", ar: "جمادى الأولى", ur: "جمادی الاول" },
+  { number: 6, en: "Jumada al-Thani", ar: "جمادى الآخرة", ur: "جمادی الثانی" },
+  { number: 7, en: "Rajab", ar: "رجب", ur: "رجب" },
+  { number: 8, en: "Sha'ban", ar: "شعبان", ur: "شعبان" },
+  { number: 9, en: "Ramadan", ar: "رمضان", ur: "رمضان" },
+  { number: 10, en: "Shawwal", ar: "شوال", ur: "شوال" },
+  { number: 11, en: "Dhu al-Qi'dah", ar: "ذو القعدة", ur: "ذوالقعدہ" },
+  { number: 12, en: "Dhu al-Hijjah", ar: "ذو الحجة", ur: "ذوالحجہ" },
 ];
 
 const HijriCalendarPage = () => {
@@ -64,6 +67,7 @@ const HijriCalendarPage = () => {
   const [convertDate, setConvertDate] = useState("");
   const [convertedResult, setConvertedResult] = useState<string | null>(null);
   const [convertDirection, setConvertDirection] = useState<"toHijri" | "toGregorian">("toHijri");
+  const { t, language } = useLanguage();
 
   useEffect(() => {
     const fetchTodayDate = async () => {
@@ -110,7 +114,7 @@ const HijriCalendarPage = () => {
       }
     } catch (error) {
       console.error("Conversion failed:", error);
-      setConvertedResult("Conversion failed. Please check the date format.");
+      setConvertedResult(language === "ur" ? "تبدیلی ناکام۔ تاریخ کی شکل چیک کریں۔" : "Conversion failed. Please check the date format.");
     }
   };
 
@@ -136,8 +140,8 @@ const HijriCalendarPage = () => {
             <ArrowLeft className="w-5 h-5 text-foreground" />
           </Link>
           <div>
-            <h1 className="text-xl font-bold text-foreground">Islamic Calendar</h1>
-            <p className="text-xs text-muted-foreground font-arabic">التقويم الهجري</p>
+            <h1 className="text-xl font-bold text-foreground">{t("page.calendar")}</h1>
+            <p className="text-xs text-muted-foreground font-arabic">{t("page.calendarArabic")}</p>
           </div>
         </div>
       </header>
@@ -162,21 +166,21 @@ const HijriCalendarPage = () => {
               <p className="text-lg font-arabic opacity-90">{hijriDate.weekday.ar}</p>
             </div>
           ) : (
-            <p className="text-center">Unable to load date</p>
+            <p className="text-center">{language === "ur" ? "تاریخ لوڈ نہیں ہو سکی" : "Unable to load date"}</p>
           )}
         </Card>
 
         <Tabs defaultValue="events" className="w-full">
           <TabsList className="grid w-full grid-cols-3 mb-6">
-            <TabsTrigger value="events">Events</TabsTrigger>
-            <TabsTrigger value="months">Months</TabsTrigger>
-            <TabsTrigger value="converter">Converter</TabsTrigger>
+            <TabsTrigger value="events">{t("calendar.events")}</TabsTrigger>
+            <TabsTrigger value="months">{t("calendar.months")}</TabsTrigger>
+            <TabsTrigger value="converter">{t("calendar.converter")}</TabsTrigger>
           </TabsList>
 
           <TabsContent value="events">
             <h2 className="text-xl font-bold text-foreground mb-4 flex items-center gap-2">
               <Star className="w-5 h-5 text-gold" />
-              Upcoming Islamic Events
+              {t("calendar.upcoming")}
             </h2>
             
             <div className="space-y-4">
@@ -184,7 +188,9 @@ const HijriCalendarPage = () => {
                 <Card key={index} className="p-5 bg-card border-border/50">
                   <div className="flex items-start justify-between mb-2">
                     <div>
-                      <h3 className="font-semibold text-foreground">{event.name}</h3>
+                      <h3 className="font-semibold text-foreground">
+                        {language === "ur" ? event.nameUrdu : event.name}
+                      </h3>
                       <p className="text-gold font-arabic">{event.arabic}</p>
                     </div>
                     <div className="text-right">
@@ -193,21 +199,25 @@ const HijriCalendarPage = () => {
                       </p>
                     </div>
                   </div>
-                  <p className="text-sm text-muted-foreground">{event.description}</p>
+                  <p className="text-sm text-muted-foreground">
+                    {language === "ur" ? event.descriptionUrdu : event.description}
+                  </p>
                 </Card>
               )) : (
                 <p className="text-muted-foreground text-center py-8">
-                  Loading upcoming events...
+                  {language === "ur" ? "آنے والے واقعات لوڈ ہو رہے ہیں..." : "Loading upcoming events..."}
                 </p>
               )}
 
-              <h3 className="text-lg font-semibold text-foreground mt-8 mb-4">All Islamic Events</h3>
+              <h3 className="text-lg font-semibold text-foreground mt-8 mb-4">{t("calendar.allEvents")}</h3>
               <div className="space-y-3">
                 {islamicEvents.map((event, index) => (
                   <Card key={index} className="p-4 bg-card border-border/50">
                     <div className="flex items-center justify-between">
                       <div>
-                        <h4 className="font-medium text-foreground">{event.name}</h4>
+                        <h4 className="font-medium text-foreground">
+                          {language === "ur" ? event.nameUrdu : event.name}
+                        </h4>
                         <p className="text-sm text-gold font-arabic">{event.arabic}</p>
                       </div>
                       <p className="text-sm text-muted-foreground">
@@ -221,7 +231,7 @@ const HijriCalendarPage = () => {
           </TabsContent>
 
           <TabsContent value="months">
-            <h2 className="text-xl font-bold text-foreground mb-4">Islamic Months</h2>
+            <h2 className="text-xl font-bold text-foreground mb-4">{t("calendar.islamicMonths")}</h2>
             <div className="grid sm:grid-cols-2 gap-4">
               {hijriMonths.map((month) => {
                 const monthEvents = getMonthEvents(month.number);
@@ -242,7 +252,7 @@ const HijriCalendarPage = () => {
                       </div>
                       {isCurrent && (
                         <span className="ml-auto text-xs bg-primary text-primary-foreground px-2 py-1 rounded-full">
-                          Current
+                          {t("calendar.current")}
                         </span>
                       )}
                     </div>
@@ -250,7 +260,7 @@ const HijriCalendarPage = () => {
                       <div className="mt-3 pt-3 border-t border-border">
                         {monthEvents.map((event, i) => (
                           <p key={i} className="text-sm text-muted-foreground">
-                            <span className="text-primary font-medium">{event.day}:</span> {event.name}
+                            <span className="text-primary font-medium">{event.day}:</span> {language === "ur" ? event.nameUrdu : event.name}
                           </p>
                         ))}
                       </div>
@@ -265,7 +275,7 @@ const HijriCalendarPage = () => {
             <Card className="p-6 bg-card border-border/50">
               <h2 className="text-xl font-bold text-foreground mb-6 flex items-center gap-2">
                 <ArrowRightLeft className="w-5 h-5 text-gold" />
-                Date Converter
+                {t("calendar.dateConverter")}
               </h2>
 
               <div className="flex flex-wrap gap-2 mb-6">
@@ -276,7 +286,7 @@ const HijriCalendarPage = () => {
                     setConvertedResult(null);
                   }}
                 >
-                  Gregorian → Hijri
+                  {t("calendar.gregorianToHijri")}
                 </Button>
                 <Button
                   variant={convertDirection === "toGregorian" ? "default" : "outline"}
@@ -285,14 +295,16 @@ const HijriCalendarPage = () => {
                     setConvertedResult(null);
                   }}
                 >
-                  Hijri → Gregorian
+                  {t("calendar.hijriToGregorian")}
                 </Button>
               </div>
 
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-foreground mb-2">
-                    {convertDirection === "toHijri" ? "Gregorian Date" : "Hijri Date"} (YYYY-MM-DD)
+                    {convertDirection === "toHijri" 
+                      ? (language === "ur" ? "عیسوی تاریخ (YYYY-MM-DD)" : "Gregorian Date (YYYY-MM-DD)")
+                      : (language === "ur" ? "ہجری تاریخ (YYYY-MM-DD)" : "Hijri Date (YYYY-MM-DD)")}
                   </label>
                   <div className="flex gap-2">
                     <Input
@@ -302,19 +314,19 @@ const HijriCalendarPage = () => {
                       className="flex-1"
                     />
                     <Button onClick={handleConvert}>
-                      Convert
+                      {t("calendar.convert")}
                     </Button>
                   </div>
                   <p className="text-xs text-muted-foreground mt-1">
                     {convertDirection === "toHijri" 
-                      ? "Enter a Gregorian date to convert to Hijri"
-                      : "Enter a Hijri date (e.g., 1446-07-15) to convert to Gregorian"}
+                      ? (language === "ur" ? "ہجری میں تبدیل کرنے کے لیے عیسوی تاریخ درج کریں" : "Enter a Gregorian date to convert to Hijri")
+                      : (language === "ur" ? "عیسوی میں تبدیل کرنے کے لیے ہجری تاریخ درج کریں (مثلاً 1446-07-15)" : "Enter a Hijri date (e.g., 1446-07-15) to convert to Gregorian")}
                   </p>
                 </div>
 
                 {convertedResult && (
                   <Card className="p-4 bg-primary/5 border-primary/20">
-                    <p className="text-sm font-medium text-muted-foreground mb-1">Result:</p>
+                    <p className="text-sm font-medium text-muted-foreground mb-1">{t("calendar.result")}:</p>
                     <p className="text-lg font-semibold text-foreground">{convertedResult}</p>
                   </Card>
                 )}

@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { useState, useEffect, useRef } from "react";
 import { useFavorites } from "@/hooks/useFavorites";
 import { toast } from "sonner";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface Surah {
   number: number;
@@ -39,6 +40,7 @@ const QuranPage = () => {
   const [playingVerse, setPlayingVerse] = useState<number | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const { isFavorite, toggleFavorite } = useFavorites();
+  const { t, language } = useLanguage();
 
   useEffect(() => {
     const fetchSurahs = async () => {
@@ -48,13 +50,13 @@ const QuranPage = () => {
         setSurahs(data.data);
       } catch (error) {
         console.error("Failed to fetch surahs:", error);
-        toast.error("Failed to load Quran data");
+        toast.error(language === "ur" ? "قرآن کا ڈیٹا لوڈ نہیں ہو سکا" : "Failed to load Quran data");
       } finally {
         setLoading(false);
       }
     };
     fetchSurahs();
-  }, []);
+  }, [language]);
 
   const fetchSurahDetails = async (surah: Surah) => {
     setLoadingVerses(true);
@@ -72,7 +74,7 @@ const QuranPage = () => {
       setTranslations(translationData.data.ayahs);
     } catch (error) {
       console.error("Failed to fetch surah details:", error);
-      toast.error("Failed to load surah");
+      toast.error(language === "ur" ? "سورہ لوڈ نہیں ہو سکی" : "Failed to load surah");
     } finally {
       setLoadingVerses(false);
     }
@@ -145,8 +147,8 @@ const QuranPage = () => {
     
     toast.success(
       isFavorite(`verse-${selectedSurah.number}-${verse.numberInSurah}`)
-        ? "Removed from favorites"
-        : "Added to favorites"
+        ? (language === "ur" ? "پسندیدہ سے ہٹا دیا گیا" : "Removed from favorites")
+        : (language === "ur" ? "پسندیدہ میں شامل ہو گیا" : "Added to favorites")
     );
   };
 
@@ -176,7 +178,7 @@ const QuranPage = () => {
             </button>
             <div className="flex-1">
               <h1 className="text-xl font-bold text-foreground">{selectedSurah.englishName}</h1>
-              <p className="text-xs text-muted-foreground">{selectedSurah.englishNameTranslation} • {selectedSurah.numberOfAyahs} verses</p>
+              <p className="text-xs text-muted-foreground">{selectedSurah.englishNameTranslation} • {selectedSurah.numberOfAyahs} {t("quran.verses")}</p>
             </div>
             <Button
               variant={isPlayingFullSurah ? "default" : "outline"}
@@ -187,12 +189,12 @@ const QuranPage = () => {
               {isPlayingFullSurah ? (
                 <>
                   <Pause className="w-4 h-4" />
-                  Stop
+                  {t("quran.stop")}
                 </>
               ) : (
                 <>
                   <Play className="w-4 h-4" />
-                  Play All
+                  {t("quran.playAll")}
                 </>
               )}
             </Button>
@@ -213,7 +215,7 @@ const QuranPage = () => {
                     بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ
                   </p>
                   <p className="text-muted-foreground mt-2 text-sm">
-                    In the name of Allah, the Most Gracious, the Most Merciful
+                    {t("quran.bismillah")}
                   </p>
                 </div>
               )}
@@ -285,8 +287,8 @@ const QuranPage = () => {
             <ArrowLeft className="w-5 h-5 text-foreground" />
           </Link>
           <div>
-            <h1 className="text-xl font-bold text-foreground">Holy Quran</h1>
-            <p className="text-xs text-muted-foreground font-arabic">القرآن الكريم</p>
+            <h1 className="text-xl font-bold text-foreground">{t("page.quran")}</h1>
+            <p className="text-xs text-muted-foreground font-arabic">{t("page.quranArabic")}</p>
           </div>
         </div>
       </header>
@@ -297,7 +299,7 @@ const QuranPage = () => {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
             <Input
               type="text"
-              placeholder="Search surah..."
+              placeholder={t("quran.search")}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-10"
@@ -330,7 +332,7 @@ const QuranPage = () => {
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
                       <span>{surah.englishNameTranslation}</span>
                       <span>•</span>
-                      <span>{surah.numberOfAyahs} verses</span>
+                      <span>{surah.numberOfAyahs} {t("quran.verses")}</span>
                       <span>•</span>
                       <span className="capitalize">{surah.revelationType}</span>
                     </div>
