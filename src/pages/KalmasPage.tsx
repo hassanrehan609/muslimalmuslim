@@ -1,9 +1,11 @@
-import { ArrowLeft, Volume2, Pause } from "lucide-react";
+import { ArrowLeft, Volume2, Pause, Loader2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useState, useRef } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/hooks/use-toast";
 
 const kalmas = [
   {
@@ -76,24 +78,75 @@ const kalmas = [
 
 const KalmasPage = () => {
   const [playingIndex, setPlayingIndex] = useState<number | null>(null);
-  const speechRef = useRef<SpeechSynthesisUtterance | null>(null);
+  const [loadingIndex, setLoadingIndex] = useState<number | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
   const { t, language } = useLanguage();
 
-  const playArabic = (arabic: string, index: number) => {
+  const playArabicWithElevenLabs = async (arabic: string, index: number) => {
+    // If already playing this kalma, stop it
     if (playingIndex === index) {
-      window.speechSynthesis.cancel();
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
+      }
       setPlayingIndex(null);
       return;
     }
 
-    window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(arabic);
-    utterance.lang = 'ar-SA';
-    utterance.rate = 0.7;
-    utterance.onend = () => setPlayingIndex(null);
-    speechRef.current = utterance;
-    window.speechSynthesis.speak(utterance);
-    setPlayingIndex(index);
+    // Stop any currently playing audio
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current = null;
+    }
+
+    setLoadingIndex(index);
+    setPlayingIndex(null);
+
+    try {
+      const response = await supabase.functions.invoke('elevenlabs-kalmas-tts', {
+        body: { text: arabic }
+      });
+
+      if (response.error) {
+        throw new Error(response.error.message || t("error.audioFailed"));
+      }
+
+      if (!response.data?.audioContent) {
+        throw new Error(t("error.audioFailed"));
+      }
+
+      // Use data URI for base64 audio
+      const audioUrl = `data:audio/mpeg;base64,${response.data.audioContent}`;
+      const audio = new Audio(audioUrl);
+      audioRef.current = audio;
+      
+      audio.onended = () => {
+        setPlayingIndex(null);
+        audioRef.current = null;
+      };
+
+      audio.onerror = () => {
+        toast({
+          title: t("common.error"),
+          description: t("error.audioFailed"),
+          variant: "destructive",
+        });
+        setPlayingIndex(null);
+        audioRef.current = null;
+      };
+
+      await audio.play();
+      setPlayingIndex(index);
+    } catch (error) {
+      console.error("Error playing audio:", error);
+      toast({
+        title: t("common.error"),
+        description: t("error.audioFailed"),
+        variant: "destructive",
+      });
+    } finally {
+      setLoadingIndex(null);
+    }
   };
 
   return (
@@ -130,10 +183,13 @@ const KalmasPage = () => {
                 <Button
                   variant="ghost"
                   size="icon"
-                  onClick={() => playArabic(kalma.arabic, index)}
+                  onClick={() => playArabicWithElevenLabs(kalma.arabic, index)}
                   className="text-gold hover:bg-gold/10"
+                  disabled={loadingIndex === index}
                 >
-                  {playingIndex === index ? (
+                  {loadingIndex === index ? (
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                  ) : playingIndex === index ? (
                     <Pause className="w-5 h-5" />
                   ) : (
                     <Volume2 className="w-5 h-5" />
