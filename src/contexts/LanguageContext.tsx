@@ -218,6 +218,45 @@ const translations: Record<Language, Record<string, string>> = {
     "common.of": "of",
     "common.addedToFavorites": "Added to favorites",
     "common.removedFromFavorites": "Removed from favorites",
+    
+    // Error Messages
+    "error.generic": "Something went wrong. Please try again.",
+    "error.network": "Network error. Please check your connection.",
+    "error.invalidCredentials": "Invalid credentials. Please try again.",
+    "error.userNotFound": "User not found.",
+    "error.passwordMismatch": "Passwords do not match.",
+    "error.weakPassword": "Password is too weak. Use at least 6 characters.",
+    "error.phoneRequired": "Phone number is required.",
+    "error.invalidPhone": "Invalid phone number format.",
+    "error.invalidOtp": "Invalid OTP code.",
+    "error.otpExpired": "OTP has expired. Please request a new one.",
+    "error.accountExists": "An account with this phone number already exists.",
+    "error.loginFailed": "Login failed. Please try again.",
+    "error.signupFailed": "Sign up failed. Please try again.",
+    "error.updateFailed": "Update failed. Please try again.",
+    "error.loadingFailed": "Failed to load data. Please refresh.",
+    "error.audioFailed": "Failed to play audio. Please try again.",
+    "error.locationFailed": "Failed to get location. Please enable location services.",
+    "error.permissionDenied": "Permission denied.",
+    
+    // Toast Messages
+    "toast.profileUpdated": "Profile updated successfully",
+    "toast.passwordChanged": "Password changed successfully",
+    "toast.loggedOut": "Logged out successfully",
+    "toast.welcomeBack": "Welcome back!",
+    "toast.accountCreated": "Account created successfully",
+    "toast.otpSent": "OTP sent to your phone",
+    "toast.passwordReset": "Password has been reset",
+    "toast.copied": "Copied to clipboard",
+    "toast.saved": "Saved successfully",
+    "toast.deleted": "Deleted successfully",
+    "toast.counterReset": "Counter reset",
+    "toast.targetReached": "Target reached! Masha'Allah!",
+    
+    // Kalmas Audio
+    "kalmas.playAudio": "Play Arabic Recitation",
+    "kalmas.pauseAudio": "Pause",
+    "kalmas.loading": "Loading audio...",
   },
   ur: {
     // Header
@@ -428,6 +467,45 @@ const translations: Record<Language, Record<string, string>> = {
     "common.of": "میں سے",
     "common.addedToFavorites": "پسندیدہ میں شامل ہو گیا",
     "common.removedFromFavorites": "پسندیدہ سے ہٹا دیا گیا",
+    
+    // Error Messages
+    "error.generic": "کچھ غلط ہو گیا۔ براہ کرم دوبارہ کوشش کریں۔",
+    "error.network": "نیٹ ورک میں خرابی۔ براہ کرم اپنا کنکشن چیک کریں۔",
+    "error.invalidCredentials": "غلط معلومات۔ براہ کرم دوبارہ کوشش کریں۔",
+    "error.userNotFound": "صارف نہیں ملا۔",
+    "error.passwordMismatch": "پاس ورڈ میچ نہیں ہوتے۔",
+    "error.weakPassword": "پاس ورڈ کمزور ہے۔ کم از کم ۶ حروف استعمال کریں۔",
+    "error.phoneRequired": "فون نمبر درکار ہے۔",
+    "error.invalidPhone": "غلط فون نمبر فارمیٹ۔",
+    "error.invalidOtp": "غلط OTP کوڈ۔",
+    "error.otpExpired": "OTP کی میعاد ختم ہو گئی۔ براہ کرم نیا OTP حاصل کریں۔",
+    "error.accountExists": "اس فون نمبر سے اکاؤنٹ پہلے سے موجود ہے۔",
+    "error.loginFailed": "لاگ ان ناکام۔ براہ کرم دوبارہ کوشش کریں۔",
+    "error.signupFailed": "سائن اپ ناکام۔ براہ کرم دوبارہ کوشش کریں۔",
+    "error.updateFailed": "اپ ڈیٹ ناکام۔ براہ کرم دوبارہ کوشش کریں۔",
+    "error.loadingFailed": "ڈیٹا لوڈ کرنے میں ناکام۔ براہ کرم ریفریش کریں۔",
+    "error.audioFailed": "آڈیو چلانے میں ناکام۔ براہ کرم دوبارہ کوشش کریں۔",
+    "error.locationFailed": "لوکیشن حاصل کرنے میں ناکام۔ براہ کرم لوکیشن سروسز آن کریں۔",
+    "error.permissionDenied": "اجازت سے انکار۔",
+    
+    // Toast Messages
+    "toast.profileUpdated": "پروفائل کامیابی سے اپ ڈیٹ ہو گئی",
+    "toast.passwordChanged": "پاس ورڈ کامیابی سے تبدیل ہو گیا",
+    "toast.loggedOut": "کامیابی سے لاگ آؤٹ ہو گئے",
+    "toast.welcomeBack": "واپسی پر خوش آمدید!",
+    "toast.accountCreated": "اکاؤنٹ کامیابی سے بن گیا",
+    "toast.otpSent": "آپ کے فون پر OTP بھیج دیا گیا",
+    "toast.passwordReset": "پاس ورڈ ری سیٹ ہو گیا",
+    "toast.copied": "کلپ بورڈ میں کاپی ہو گیا",
+    "toast.saved": "کامیابی سے محفوظ ہو گیا",
+    "toast.deleted": "کامیابی سے حذف ہو گیا",
+    "toast.counterReset": "کاؤنٹر ری سیٹ ہو گیا",
+    "toast.targetReached": "ہدف مکمل! ماشاء اللہ!",
+    
+    // Kalmas Audio
+    "kalmas.playAudio": "عربی تلاوت چلائیں",
+    "kalmas.pauseAudio": "روکیں",
+    "kalmas.loading": "آڈیو لوڈ ہو رہا ہے...",
   },
 };
 
