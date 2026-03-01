@@ -1,15 +1,24 @@
 import { useState, useRef, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
-import { ArrowLeft, Send, Bot, User, Loader2 } from "lucide-react";
+import { ArrowLeft, Send, Bot, User, Loader2, Volume2, Pause, Paperclip, Image, FileText } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 type Message = {
   role: "user" | "assistant";
   content: string;
+  imageUrl?: string;
 };
 
 const ChatbotPage = () => {
@@ -24,15 +33,16 @@ const ChatbotPage = () => {
   };
   
   const [messages, setMessages] = useState<Message[]>([
-    {
-      role: "assistant",
-      content: getWelcomeMessage()
-    }
+    { role: "assistant", content: getWelcomeMessage() }
   ]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [hasProcessedInitialQuery, setHasProcessedInitialQuery] = useState(false);
+  const [playingMessage, setPlayingMessage] = useState<number | null>(null);
+  const [loadingAudio, setLoadingAudio] = useState<number | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/islamic-chat`;
 
   useEffect(() => {
@@ -41,18 +51,89 @@ const ChatbotPage = () => {
     }
   }, [messages]);
 
-  // Handle initial query from URL
   useEffect(() => {
     if (initialQuery && !hasProcessedInitialQuery) {
       setHasProcessedInitialQuery(true);
       setInput(initialQuery);
-      // Auto-send after a short delay
       setTimeout(() => {
-        const fakeEvent = { preventDefault: () => {} } as React.FormEvent;
         sendMessageWithContent(initialQuery);
       }, 500);
     }
   }, [initialQuery, hasProcessedInitialQuery]);
+
+  const playMessageAudio = async (text: string, index: number) => {
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current = null;
+    }
+
+    if (playingMessage === index) {
+      setPlayingMessage(null);
+      return;
+    }
+
+    setLoadingAudio(index);
+    setPlayingMessage(null);
+
+    try {
+      const response = await supabase.functions.invoke('elevenlabs-kalmas-tts', {
+        body: { text: text.substring(0, 4000) }
+      });
+
+      if (response.error) throw new Error(response.error.message);
+      if (!response.data?.audioContent) throw new Error("No audio");
+
+      const audioUrl = `data:audio/mpeg;base64,${response.data.audioContent}`;
+      const audio = new Audio(audioUrl);
+      audioRef.current = audio;
+
+      audio.onended = () => { setPlayingMessage(null); audioRef.current = null; };
+      audio.onerror = () => {
+        toast.error(language === "ur" ? "آڈیو چلانے میں خرابی" : "Error playing audio");
+        setPlayingMessage(null); audioRef.current = null;
+      };
+
+      await audio.play();
+      setPlayingMessage(index);
+    } catch (error) {
+      console.error("TTS error:", error);
+      toast.error(language === "ur" ? "آڈیو دستیاب نہیں" : "Audio not available");
+    } finally {
+      setLoadingAudio(null);
+    }
+  };
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      toast.error(language === "ur" ? "صرف تصاویر اپ لوڈ کریں" : "Only images are supported");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      const imageUrl = reader.result as string;
+      const userMessage: Message = {
+        role: "user",
+        content: language === "ur" ? "یہ تصویر دیکھیں" : "Please look at this image",
+        imageUrl
+      };
+      setMessages(prev => [...prev, userMessage]);
+      // For now just acknowledge - full vision would need multimodal model
+      setTimeout(() => {
+        setMessages(prev => [...prev, {
+          role: "assistant",
+          content: language === "ur"
+            ? "شکریہ تصویر بھیجنے کے لیے۔ براہ کرم اپنا سوال ٹائپ کریں تاکہ میں آپ کی مدد کر سکوں۔"
+            : "Thank you for sharing the image. Please type your question so I can assist you."
+        }]);
+      }, 500);
+    };
+    reader.readAsDataURL(file);
+    e.target.value = '';
+  };
 
   const sendMessageWithContent = async (content: string) => {
     if (!content.trim() || isLoading) return;
@@ -71,7 +152,7 @@ const ChatbotPage = () => {
           "Content-Type": "application/json",
           Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
         },
-        body: JSON.stringify({ messages: [...messages, userMessage] }),
+        body: JSON.stringify({ messages: [...messages, userMessage].map(m => ({ role: m.role, content: m.content })) }),
       });
 
       if (!response.ok) {
@@ -80,15 +161,12 @@ const ChatbotPage = () => {
         throw new Error(`Server error: ${response.status}`);
       }
 
-      if (!response.body) {
-        throw new Error("No response body");
-      }
+      if (!response.body) throw new Error("No response body");
 
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
       let buffer = "";
 
-      // Add assistant message placeholder immediately
       setMessages(prev => [...prev, { role: "assistant", content: "" }]);
 
       while (true) {
@@ -114,21 +192,17 @@ const ChatbotPage = () => {
             const deltaContent = parsed.choices?.[0]?.delta?.content;
             if (deltaContent) {
               assistantContent += deltaContent;
-              setMessages(prev => {
-                return prev.map((m, i) => 
-                  i === prev.length - 1 ? { ...m, content: assistantContent } : m
-                );
-              });
+              setMessages(prev => prev.map((m, i) => 
+                i === prev.length - 1 ? { ...m, content: assistantContent } : m
+              ));
             }
           } catch {
-            // Incomplete JSON, keep in buffer and continue
             buffer = line + "\n" + buffer;
             break;
           }
         }
       }
 
-      // Ensure final content is set
       if (assistantContent) {
         setMessages(prev => prev.map((m, i) => 
           i === prev.length - 1 ? { ...m, content: assistantContent } : m
@@ -137,7 +211,6 @@ const ChatbotPage = () => {
     } catch (error) {
       console.error("Chat error:", error);
       setMessages(prev => {
-        // Remove empty assistant placeholder if exists
         const filtered = prev.filter((m, i) => !(i === prev.length - 1 && m.role === "assistant" && !m.content));
         return [
           ...filtered,
@@ -203,12 +276,36 @@ const ChatbotPage = () => {
                   <Bot className="w-4 h-4 text-primary-foreground" />
                 )}
               </div>
-              <div className={`max-w-[80%] p-4 rounded-2xl ${
+              <div className={`max-w-[80%] rounded-2xl ${
                 message.role === "user"
                   ? "bg-gold text-gold-foreground rounded-tr-sm"
                   : "bg-muted text-foreground rounded-tl-sm"
               }`}>
-                <p className="whitespace-pre-wrap">{message.content}</p>
+                {message.imageUrl && (
+                  <img src={message.imageUrl} alt="Uploaded" className="rounded-t-2xl max-h-48 w-full object-cover" />
+                )}
+                <div className="p-4">
+                  <p className="whitespace-pre-wrap">{message.content}</p>
+                </div>
+                {/* Listen button for assistant messages */}
+                {message.role === "assistant" && message.content && (
+                  <div className="px-4 pb-3 flex items-center gap-2">
+                    <button
+                      onClick={() => playMessageAudio(message.content, index)}
+                      disabled={loadingAudio === index}
+                      className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      {loadingAudio === index ? (
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      ) : playingMessage === index ? (
+                        <Pause className="w-3.5 h-3.5" />
+                      ) : (
+                        <Volume2 className="w-3.5 h-3.5" />
+                      )}
+                      {language === "ur" ? "سنیں" : "Listen"}
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           ))}
@@ -227,7 +324,33 @@ const ChatbotPage = () => {
 
       {/* Input */}
       <div className="p-4 border-t border-border bg-background">
-        <div className="max-w-2xl mx-auto flex gap-3">
+        <div className="max-w-2xl mx-auto flex gap-2 items-center">
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            onChange={handleImageUpload}
+            className="hidden"
+          />
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="flex-shrink-0 text-muted-foreground hover:text-foreground">
+                <Paperclip className="w-5 h-5" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start">
+              <DropdownMenuItem onClick={() => fileInputRef.current?.click()}>
+                <Image className="w-4 h-4 mr-2" />
+                {language === "ur" ? "تصویر" : "Image"}
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => {
+                toast.info(language === "ur" ? "دستاویز کی سہولت جلد آ رہی ہے" : "Document support coming soon");
+              }}>
+                <FileText className="w-4 h-4 mr-2" />
+                {language === "ur" ? "دستاویز" : "Document"}
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
           <Input
             value={input}
             onChange={(e) => setInput(e.target.value)}
@@ -239,7 +362,7 @@ const ChatbotPage = () => {
           <Button
             onClick={sendMessage}
             disabled={!input.trim() || isLoading}
-            className="bg-gold hover:bg-gold/90 text-gold-foreground"
+            className="bg-gold hover:bg-gold/90 text-gold-foreground flex-shrink-0"
           >
             <Send className="w-5 h-5" />
           </Button>
