@@ -1,10 +1,13 @@
-import { ArrowLeft, ChevronRight, Clock, BookOpen } from "lucide-react";
+import { ArrowLeft, ChevronRight, Clock, BookOpen, Volume2, Pause, Loader2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useState, useRef } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 const prayers = [
   { name: "Fajr", nameUrdu: "فجر", arabic: "الفجر", rakats: "2 Sunnah + 2 Fard", rakatsUrdu: "2 سنت + 2 فرض", time: "Before sunrise", timeUrdu: "طلوع آفتاب سے پہلے" },
@@ -154,6 +157,51 @@ const essentialDuas = [
 
 const NamazPage = () => {
   const { t, language } = useLanguage();
+  const [playingDua, setPlayingDua] = useState<number | null>(null);
+  const [loadingDua, setLoadingDua] = useState<number | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  const playDuaAudio = async (arabic: string, index: number) => {
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current = null;
+    }
+
+    if (playingDua === index) {
+      setPlayingDua(null);
+      return;
+    }
+
+    setLoadingDua(index);
+    setPlayingDua(null);
+
+    try {
+      const response = await supabase.functions.invoke('elevenlabs-kalmas-tts', {
+        body: { text: arabic }
+      });
+
+      if (response.error) throw new Error(response.error.message);
+      if (!response.data?.audioContent) throw new Error("No audio");
+
+      const audioUrl = `data:audio/mpeg;base64,${response.data.audioContent}`;
+      const audio = new Audio(audioUrl);
+      audioRef.current = audio;
+
+      audio.onended = () => { setPlayingDua(null); audioRef.current = null; };
+      audio.onerror = () => {
+        toast.error(language === "ur" ? "آڈیو چلانے میں خرابی" : "Error playing audio");
+        setPlayingDua(null); audioRef.current = null;
+      };
+
+      await audio.play();
+      setPlayingDua(index);
+    } catch (error) {
+      console.error("Error playing audio:", error);
+      toast.error(language === "ur" ? "آڈیو دستیاب نہیں" : "Audio not available");
+    } finally {
+      setLoadingDua(null);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -254,10 +302,27 @@ const NamazPage = () => {
             </div>
             {essentialDuas.map((dua, index) => (
               <Card key={index} className="p-6 bg-card border-border">
-                <h3 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
-                  <BookOpen className="w-5 h-5 text-gold" />
-                  {language === "ur" ? dua.titleUrdu : dua.title}
-                </h3>
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
+                    <BookOpen className="w-5 h-5 text-gold" />
+                    {language === "ur" ? dua.titleUrdu : dua.title}
+                  </h3>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => playDuaAudio(dua.arabic, index)}
+                    className="text-gold hover:bg-gold/10"
+                    disabled={loadingDua === index}
+                  >
+                    {loadingDua === index ? (
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                    ) : playingDua === index ? (
+                      <Pause className="w-5 h-5" />
+                    ) : (
+                      <Volume2 className="w-5 h-5" />
+                    )}
+                  </Button>
+                </div>
                 <div className="space-y-4">
                   <p className="text-xl font-arabic text-gold leading-loose text-right">
                     {dua.arabic}

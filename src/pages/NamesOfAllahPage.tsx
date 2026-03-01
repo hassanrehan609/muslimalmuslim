@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { ArrowLeft, Search, Heart, Play, Pause, Volume2 } from "lucide-react";
+import { ArrowLeft, Search, Heart, Play, Pause, Volume2, Loader2 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -7,11 +7,7 @@ import { useState, useRef } from "react";
 import { useFavorites } from "@/hooks/useFavorites";
 import { toast } from "sonner";
 import { useLanguage } from "@/contexts/LanguageContext";
-
-// Audio URLs for each name (using islamcan.com audio)
-const getNameAudioUrl = (number: number): string => {
-  return `https://www.islamcan.com/audio/99-names-of-allah/${number.toString().padStart(2, '0')}.mp3`;
-};
+import { supabase } from "@/integrations/supabase/client";
 
 const namesOfAllah = [
   { number: 1, arabic: "الرَّحْمَنُ", transliteration: "Ar-Rahman", meaning: "The Most Gracious", meaningUrdu: "بہت مہربان" },
@@ -118,13 +114,15 @@ const namesOfAllah = [
 const NamesOfAllahPage = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [playingName, setPlayingName] = useState<number | null>(null);
+  const [loadingName, setLoadingName] = useState<number | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const { isFavorite, toggleFavorite } = useFavorites();
   const { t, language } = useLanguage();
 
-  const playNameAudio = (number: number) => {
+  const playNameAudio = async (number: number, arabic: string) => {
     if (audioRef.current) {
       audioRef.current.pause();
+      audioRef.current = null;
     }
     
     if (playingName === number) {
@@ -132,17 +130,45 @@ const NamesOfAllahPage = () => {
       return;
     }
 
-    const audioUrl = getNameAudioUrl(number);
-    audioRef.current = new Audio(audioUrl);
-    audioRef.current.play().catch(() => {
-      toast.error(language === "ur" ? "آڈیو دستیاب نہیں" : "Audio not available for this name");
-      setPlayingName(null);
-    });
-    setPlayingName(number);
-    
-    audioRef.current.onended = () => {
-      setPlayingName(null);
-    };
+    setLoadingName(number);
+    setPlayingName(null);
+
+    try {
+      const response = await supabase.functions.invoke('elevenlabs-kalmas-tts', {
+        body: { text: arabic }
+      });
+
+      if (response.error) {
+        throw new Error(response.error.message);
+      }
+
+      if (!response.data?.audioContent) {
+        throw new Error("No audio content");
+      }
+
+      const audioUrl = `data:audio/mpeg;base64,${response.data.audioContent}`;
+      const audio = new Audio(audioUrl);
+      audioRef.current = audio;
+
+      audio.onended = () => {
+        setPlayingName(null);
+        audioRef.current = null;
+      };
+
+      audio.onerror = () => {
+        toast.error(language === "ur" ? "آڈیو چلانے میں خرابی" : "Error playing audio");
+        setPlayingName(null);
+        audioRef.current = null;
+      };
+
+      await audio.play();
+      setPlayingName(number);
+    } catch (error) {
+      console.error("Error playing audio:", error);
+      toast.error(language === "ur" ? "آڈیو دستیاب نہیں" : "Audio not available");
+    } finally {
+      setLoadingName(null);
+    }
   };
 
   const handleFavorite = (name: typeof namesOfAllah[0]) => {
@@ -215,12 +241,15 @@ const NamesOfAllahPage = () => {
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
-                      playNameAudio(name.number);
+                      playNameAudio(name.number, name.arabic);
                     }}
                     className="p-1.5 rounded-full hover:bg-primary-foreground/10 transition-colors"
                     aria-label="Play pronunciation"
+                    disabled={loadingName === name.number}
                   >
-                    {playingName === name.number ? (
+                    {loadingName === name.number ? (
+                      <Loader2 className="w-4 h-4 animate-spin text-gold" />
+                    ) : playingName === name.number ? (
                       <Pause className="w-4 h-4 text-primary" />
                     ) : (
                       <Volume2 className="w-4 h-4 text-gold opacity-0 group-hover:opacity-100 transition-opacity" />
