@@ -257,8 +257,6 @@ const AuthPage = () => {
     setOtp("");
     setNewPassword("");
     setConfirmPassword("");
-    setGeneratedOtp("");
-    setOtpExpiry(null);
     setPhone("");
   };
 
