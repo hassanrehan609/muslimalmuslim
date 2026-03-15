@@ -2,3 +2,12 @@ project_id = "xjyfymkvqonhaalkzkya"
 
 [functions.islamic-chat]
 verify_jwt = false
+
+[functions.elevenlabs-kalmas-tts]
+verify_jwt = false
+
+[functions.send-password-reset-otp]
+verify_jwt = false
+
+[functions.reset-password-with-otp]
+verify_jwt = false
