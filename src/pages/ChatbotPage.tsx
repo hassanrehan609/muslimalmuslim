@@ -144,6 +144,28 @@ const ChatbotPage = () => {
     e.target.value = '';
   };
 
+  const getAuthenticatedHeaders = useCallback(async () => {
+    const publishableKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+
+    let { data: { session } } = await supabase.auth.getSession();
+    let accessToken = session?.access_token;
+
+    if (!accessToken) {
+      const { data: refreshed } = await supabase.auth.refreshSession();
+      accessToken = refreshed.session?.access_token;
+    }
+
+    if (!accessToken || accessToken === publishableKey) {
+      throw new Error("Not authenticated");
+    }
+
+    return {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${accessToken}`,
+      apikey: publishableKey,
+    };
+  }, []);
+
   const sendMessageWithContent = async (content: string) => {
     if (!content.trim() || isLoading) return;
 
