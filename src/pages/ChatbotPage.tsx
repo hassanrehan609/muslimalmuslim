@@ -42,9 +42,11 @@ const ChatbotPage = () => {
   const [hasProcessedInitialQuery, setHasProcessedInitialQuery] = useState(false);
   const [playingMessage, setPlayingMessage] = useState<number | null>(null);
   const [loadingAudio, setLoadingAudio] = useState<number | null>(null);
+  const [isVoiceMode, setIsVoiceMode] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const messagesRef = useRef<Message[]>([]);
   const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/islamic-chat`;
 
   useEffect(() => {
