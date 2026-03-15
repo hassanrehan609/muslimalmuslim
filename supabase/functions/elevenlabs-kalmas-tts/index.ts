@@ -15,7 +15,7 @@ serve(async (req) => {
   try {
     // Authenticate user
     const authHeader = req.headers.get('Authorization');
-    if (!authHeader) {
+    if (!authHeader?.startsWith('Bearer ')) {
       return new Response(
         JSON.stringify({ error: 'Missing authorization header' }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -28,13 +28,16 @@ serve(async (req) => {
       { global: { headers: { Authorization: authHeader } } }
     );
 
-    const { data: { user }, error: authError } = await supabaseClient.auth.getUser();
-    if (authError || !user) {
+    const token = authHeader.replace('Bearer ', '');
+    const { data, error: authError } = await supabaseClient.auth.getClaims(token);
+    if (authError || !data?.claims) {
       return new Response(
         JSON.stringify({ error: 'Unauthorized' }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
+
+    const userId = data.claims.sub;
 
     const { text, voiceId } = await req.json();
     
@@ -71,7 +74,7 @@ serve(async (req) => {
 
     const selectedVoiceId = voiceId || "pNInz6obpgDQGcFmaJgB";
 
-    console.log(`Generating TTS for user ${user.id}, text length: ${text.length}`);
+    console.log(`Generating TTS for user ${userId}, text length: ${text.length}`);
 
     const response = await fetch(
       `https://api.elevenlabs.io/v1/text-to-speech/${selectedVoiceId}?output_format=mp3_44100_128`,
