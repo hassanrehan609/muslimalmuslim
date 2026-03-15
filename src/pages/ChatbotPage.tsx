@@ -49,6 +49,11 @@ const ChatbotPage = () => {
   const messagesRef = useRef<Message[]>([]);
   const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/islamic-chat`;
 
+  // Keep messagesRef in sync for voice mode callback
+  useEffect(() => {
+    messagesRef.current = messages;
+  }, [messages]);
+
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
