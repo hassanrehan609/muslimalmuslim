@@ -1,6 +1,6 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { useSearchParams } from "react-router-dom";
-import { ArrowLeft, Send, Bot, User, Loader2, Volume2, Pause, Paperclip, Image, FileText } from "lucide-react";
+import { ArrowLeft, Send, Bot, User, Loader2, Volume2, Pause, Paperclip, Image, FileText, Mic } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,6 +8,8 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import VoiceChatButton from "@/components/chat/VoiceChatButton";
+import VoiceModeOverlay from "@/components/chat/VoiceModeOverlay";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -40,10 +42,17 @@ const ChatbotPage = () => {
   const [hasProcessedInitialQuery, setHasProcessedInitialQuery] = useState(false);
   const [playingMessage, setPlayingMessage] = useState<number | null>(null);
   const [loadingAudio, setLoadingAudio] = useState<number | null>(null);
+  const [isVoiceMode, setIsVoiceMode] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const messagesRef = useRef<Message[]>([]);
   const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/islamic-chat`;
+
+  // Keep messagesRef in sync for voice mode callback
+  useEffect(() => {
+    messagesRef.current = messages;
+  }, [messages]);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -228,6 +237,77 @@ const ChatbotPage = () => {
     sendMessageWithContent(input);
   };
 
+  const handleVoiceTranscript = useCallback((text: string) => {
+    sendMessageWithContent(text);
+  }, []);
+
+  // Voice mode: send message and return the response text
+  const handleVoiceModeSend = useCallback(async (content: string): Promise<string> => {
+    if (!content.trim()) return "";
+
+    const userMessage: Message = { role: "user", content: content.trim() };
+    setMessages(prev => [...prev, userMessage]);
+
+    try {
+      const response = await fetch(CHAT_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+        },
+        body: JSON.stringify({
+          messages: [...messagesRef.current, userMessage].map(m => ({ role: m.role, content: m.content })),
+        }),
+      });
+
+      if (!response.ok || !response.body) throw new Error("Server error");
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
+      let assistantContent = "";
+
+      setMessages(prev => [...prev, { role: "assistant", content: "" }]);
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+
+        let newlineIndex: number;
+        while ((newlineIndex = buffer.indexOf("\n")) !== -1) {
+          let line = buffer.slice(0, newlineIndex);
+          buffer = buffer.slice(newlineIndex + 1);
+          if (line.endsWith("\r")) line = line.slice(0, -1);
+          if (line.startsWith(":") || line.trim() === "" || !line.startsWith("data: ")) continue;
+          const jsonStr = line.slice(6).trim();
+          if (jsonStr === "[DONE]") break;
+          try {
+            const parsed = JSON.parse(jsonStr);
+            const delta = parsed.choices?.[0]?.delta?.content;
+            if (delta) {
+              assistantContent += delta;
+              setMessages(prev => prev.map((m, i) =>
+                i === prev.length - 1 ? { ...m, content: assistantContent } : m
+              ));
+            }
+          } catch {
+            buffer = line + "\n" + buffer;
+            break;
+          }
+        }
+      }
+
+      return assistantContent;
+    } catch {
+      const errMsg = language === "ur"
+        ? "معذرت، کوئی خرابی ہوئی۔"
+        : "Sorry, an error occurred.";
+      setMessages(prev => [...prev, { role: "assistant", content: errMsg }]);
+      return errMsg;
+    }
+  }, [CHAT_URL, language]);
+
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
@@ -351,6 +431,11 @@ const ChatbotPage = () => {
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
+          <VoiceChatButton 
+            onTranscript={handleVoiceTranscript}
+            disabled={isLoading}
+            language={language}
+          />
           <Input
             value={input}
             onChange={(e) => setInput(e.target.value)}
@@ -366,8 +451,25 @@ const ChatbotPage = () => {
           >
             <Send className="w-5 h-5" />
           </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setIsVoiceMode(true)}
+            className="flex-shrink-0 text-muted-foreground hover:text-foreground"
+            title={language === "ur" ? "لائیو وائس چیٹ" : "Live voice chat"}
+          >
+            <Mic className="w-5 h-5" />
+          </Button>
         </div>
       </div>
+
+      {/* Voice Mode Overlay */}
+      <VoiceModeOverlay
+        isOpen={isVoiceMode}
+        onClose={() => setIsVoiceMode(false)}
+        onSendMessage={handleVoiceModeSend}
+        language={language}
+      />
     </div>
   );
 };
