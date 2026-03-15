@@ -431,6 +431,11 @@ const ChatbotPage = () => {
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
+          <VoiceChatButton 
+            onTranscript={handleVoiceTranscript}
+            disabled={isLoading}
+            language={language}
+          />
           <Input
             value={input}
             onChange={(e) => setInput(e.target.value)}
@@ -446,8 +451,25 @@ const ChatbotPage = () => {
           >
             <Send className="w-5 h-5" />
           </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setIsVoiceMode(true)}
+            className="flex-shrink-0 text-muted-foreground hover:text-foreground"
+            title={language === "ur" ? "لائیو وائس چیٹ" : "Live voice chat"}
+          >
+            <Mic className="w-5 h-5" />
+          </Button>
         </div>
       </div>
+
+      {/* Voice Mode Overlay */}
+      <VoiceModeOverlay
+        isOpen={isVoiceMode}
+        onClose={() => setIsVoiceMode(false)}
+        onSendMessage={handleVoiceModeSend}
+        language={language}
+      />
     </div>
   );
 };
