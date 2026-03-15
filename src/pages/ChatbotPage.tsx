@@ -1,6 +1,6 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { useSearchParams } from "react-router-dom";
-import { ArrowLeft, Send, Bot, User, Loader2, Volume2, Pause, Paperclip, Image, FileText } from "lucide-react";
+import { ArrowLeft, Send, Bot, User, Loader2, Volume2, Pause, Paperclip, Image, FileText, Mic } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,6 +8,8 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import VoiceChatButton from "@/components/chat/VoiceChatButton";
+import VoiceModeOverlay from "@/components/chat/VoiceModeOverlay";
 import {
   DropdownMenu,
   DropdownMenuContent,
