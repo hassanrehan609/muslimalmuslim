@@ -156,6 +156,9 @@ const ChatbotPage = () => {
     }
 
     if (!accessToken || accessToken === publishableKey) {
+      toast.error(language === "ur" 
+        ? "سیشن ختم ہو گیا۔ براہ کرم دوبارہ سائن ان کریں۔" 
+        : "Session expired. Please sign in again.");
       throw new Error("Not authenticated");
     }
 
@@ -164,7 +167,7 @@ const ChatbotPage = () => {
       Authorization: `Bearer ${accessToken}`,
       apikey: publishableKey,
     };
-  }, []);
+  }, [language]);
 
   const sendMessageWithContent = async (content: string) => {
     if (!content.trim() || isLoading) return;
