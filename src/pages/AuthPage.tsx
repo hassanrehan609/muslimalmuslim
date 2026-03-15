@@ -31,8 +31,6 @@ const AuthPage = () => {
   const [otp, setOtp] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [generatedOtp, setGeneratedOtp] = useState("");
-  const [otpExpiry, setOtpExpiry] = useState<Date | null>(null);
   
   const navigate = useNavigate();
   const { toast } = useToast();
