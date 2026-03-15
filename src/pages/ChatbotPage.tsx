@@ -144,6 +144,28 @@ const ChatbotPage = () => {
     e.target.value = '';
   };
 
+  const getAuthenticatedHeaders = useCallback(async () => {
+    const publishableKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+
+    let { data: { session } } = await supabase.auth.getSession();
+    let accessToken = session?.access_token;
+
+    if (!accessToken) {
+      const { data: refreshed } = await supabase.auth.refreshSession();
+      accessToken = refreshed.session?.access_token;
+    }
+
+    if (!accessToken || accessToken === publishableKey) {
+      throw new Error("Not authenticated");
+    }
+
+    return {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${accessToken}`,
+      apikey: publishableKey,
+    };
+  }, []);
+
   const sendMessageWithContent = async (content: string) => {
     if (!content.trim() || isLoading) return;
 
@@ -155,19 +177,9 @@ const ChatbotPage = () => {
     let assistantContent = "";
 
     try {
-      // Get user's auth token
-      const { data: { session } } = await supabase.auth.getSession();
-      const accessToken = session?.access_token;
-      if (!accessToken) {
-        throw new Error("Not authenticated");
-      }
-
       const response = await fetch(CHAT_URL, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${accessToken}`,
-        },
+        headers: await getAuthenticatedHeaders(),
         body: JSON.stringify({ messages: [...messages, userMessage].map(m => ({ role: m.role, content: m.content })) }),
       });
 
@@ -256,16 +268,9 @@ const ChatbotPage = () => {
     setMessages(prev => [...prev, userMessage]);
 
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      const accessToken = session?.access_token;
-      if (!accessToken) throw new Error("Not authenticated");
-
       const response = await fetch(CHAT_URL, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${accessToken}`,
-        },
+        headers: await getAuthenticatedHeaders(),
         body: JSON.stringify({
           messages: [...messagesRef.current, userMessage].map(m => ({ role: m.role, content: m.content })),
         }),
@@ -317,7 +322,7 @@ const ChatbotPage = () => {
       setMessages(prev => [...prev, { role: "assistant", content: errMsg }]);
       return errMsg;
     }
-  }, [CHAT_URL, language]);
+  }, [CHAT_URL, getAuthenticatedHeaders, language]);
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {
