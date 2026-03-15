@@ -31,8 +31,6 @@ const AuthPage = () => {
   const [otp, setOtp] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [generatedOtp, setGeneratedOtp] = useState("");
-  const [otpExpiry, setOtpExpiry] = useState<Date | null>(null);
   
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -121,11 +119,6 @@ const AuthPage = () => {
     }
   };
 
-  // Generate a 6-digit OTP
-  const generateOTP = () => {
-    return Math.floor(100000 + Math.random() * 900000).toString();
-  };
-
   const handleSendOtp = async () => {
     if (!phone) {
       toast({ 
@@ -138,31 +131,43 @@ const AuthPage = () => {
     
     setLoading(true);
     try {
-      // Check if phone number exists in profiles
       const cleanPhone = phone.replace(/\D/g, '');
-      const email = formatPhoneAsEmail(phone);
       
-      // Generate OTP and set expiry (5 minutes)
-      const newOtp = generateOTP();
-      const expiry = new Date(Date.now() + 5 * 60 * 1000);
-      
-      setGeneratedOtp(newOtp);
-      setOtpExpiry(expiry);
-      
-      // In a real app, you would send SMS here via Twilio/other service
-      // For demo purposes, we show the OTP in a toast
-      toast({ 
-        title: language === "ur" ? "OTP بھیج دیا گیا" : "OTP Sent", 
-        description: language === "ur" 
-          ? `تصدیقی کوڈ: ${newOtp} (5 منٹ کے لیے درست)` 
-          : `Verification code: ${newOtp} (valid for 5 minutes)`
+      const { data, error } = await supabase.functions.invoke('send-password-reset-otp', {
+        body: { phone: cleanPhone }
       });
+
+      if (error) throw error;
+      
+      if (data?.error) {
+        toast({ 
+          title: language === "ur" ? "خرابی" : "Error", 
+          description: data.error, 
+          variant: "destructive" 
+        });
+        return;
+      }
+
+      // Demo mode: show OTP from server response
+      if (data?.demo_otp) {
+        toast({ 
+          title: language === "ur" ? "OTP بھیج دیا گیا" : "OTP Sent", 
+          description: language === "ur" 
+            ? `تصدیقی کوڈ: ${data.demo_otp} (5 منٹ کے لیے درست)` 
+            : `Verification code: ${data.demo_otp} (valid for 5 minutes)`
+        });
+      } else {
+        toast({ 
+          title: language === "ur" ? "OTP بھیج دیا گیا" : "OTP Sent", 
+          description: language === "ur" ? "تصدیقی کوڈ بھیج دیا گیا" : "Verification code sent"
+        });
+      }
       
       setResetStep("otp");
     } catch (error: any) {
       toast({ 
         title: language === "ur" ? "خرابی" : "Error", 
-        description: error.message, 
+        description: language === "ur" ? "کوئی خرابی ہوئی۔ دوبارہ کوشش کریں" : "An error occurred. Please try again.", 
         variant: "destructive" 
       });
     } finally {
@@ -179,31 +184,8 @@ const AuthPage = () => {
       });
       return;
     }
-
-    // Check if OTP has expired
-    if (otpExpiry && new Date() > otpExpiry) {
-      toast({ 
-        title: language === "ur" ? "OTP ختم ہو گیا" : "OTP Expired", 
-        description: language === "ur" ? "براہ کرم نیا OTP حاصل کریں" : "Please request a new OTP", 
-        variant: "destructive" 
-      });
-      return;
-    }
-
-    // Verify OTP
-    if (otp === generatedOtp) {
-      toast({ 
-        title: language === "ur" ? "تصدیق کامیاب" : "Verified", 
-        description: language === "ur" ? "OTP کی تصدیق ہو گئی" : "OTP verified successfully" 
-      });
-      setResetStep("newPassword");
-    } else {
-      toast({ 
-        title: language === "ur" ? "غلط OTP" : "Invalid OTP", 
-        description: language === "ur" ? "براہ کرم صحیح OTP درج کریں" : "Please enter the correct OTP", 
-        variant: "destructive" 
-      });
-    }
+    // OTP will be verified server-side when resetting password
+    setResetStep("newPassword");
   };
 
   const handleResetPassword = async () => {
@@ -236,41 +218,33 @@ const AuthPage = () => {
 
     setLoading(true);
     try {
-      const email = formatPhoneAsEmail(phone);
+      const cleanPhone = phone.replace(/\D/g, '');
       
-      // Sign in with temporary password recovery flow
-      // In a production app, you'd use a proper phone auth or magic link
-      // For this demo, we update the password directly after OTP verification
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password: newPassword
+      const { data, error } = await supabase.functions.invoke('reset-password-with-otp', {
+        body: { phone: cleanPhone, otp, newPassword }
       });
 
-      if (error && error.message.includes("Invalid login credentials")) {
-        // User exists but password is wrong - this is expected
-        // We need admin access to change password without current password
-        // For demo, show success and redirect to login
+      if (error) throw error;
+      
+      if (data?.error) {
         toast({ 
-          title: language === "ur" ? "کامیاب" : "Success", 
-          description: language === "ur" 
-            ? "پاس ورڈ تبدیل ہو گیا۔ براہ کرم نئے پاس ورڈ سے لاگ ان کریں۔" 
-            : "Password change request submitted. Please contact support if you cannot login."
+          title: language === "ur" ? "خرابی" : "Error", 
+          description: data.error, 
+          variant: "destructive" 
         });
-        resetForgotState();
-        setMode("login");
         return;
       }
 
       toast({ 
         title: language === "ur" ? "کامیاب" : "Success", 
-        description: language === "ur" ? "پاس ورڈ تبدیل ہو گیا" : "Password updated successfully" 
+        description: language === "ur" ? "پاس ورڈ تبدیل ہو گیا۔ نئے پاس ورڈ سے لاگ ان کریں۔" : "Password updated successfully. Please login with your new password." 
       });
-      
-      navigate("/");
+      resetForgotState();
+      setMode("login");
     } catch (error: any) {
       toast({ 
         title: language === "ur" ? "خرابی" : "Error", 
-        description: error.message, 
+        description: language === "ur" ? "کوئی خرابی ہوئی۔ دوبارہ کوشش کریں" : "An error occurred. Please try again.", 
         variant: "destructive" 
       });
     } finally {
@@ -283,8 +257,6 @@ const AuthPage = () => {
     setOtp("");
     setNewPassword("");
     setConfirmPassword("");
-    setGeneratedOtp("");
-    setOtpExpiry(null);
     setPhone("");
   };
 
