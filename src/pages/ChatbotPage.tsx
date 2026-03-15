@@ -322,7 +322,7 @@ const ChatbotPage = () => {
       setMessages(prev => [...prev, { role: "assistant", content: errMsg }]);
       return errMsg;
     }
-  }, [CHAT_URL, language]);
+  }, [CHAT_URL, getAuthenticatedHeaders, language]);
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {
