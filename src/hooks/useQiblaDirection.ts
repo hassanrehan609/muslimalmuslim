@@ -38,13 +38,23 @@ const calculateQiblaDirection = (lat: number, lng: number): number => {
   return (bearing + 360) % 360;
 };
 
+// Normalize angle difference to [-180, 180]
+const angleDiff = (a: number, b: number): number => {
+  let diff = a - b;
+  while (diff > 180) diff -= 360;
+  while (diff < -180) diff += 360;
+  return diff;
+};
+
 export const useQiblaDirection = () => {
   const [qiblaData, setQiblaData] = useState<QiblaData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [compassHeading, setCompassHeading] = useState<number | null>(null);
   const [permissionNeeded, setPermissionNeeded] = useState(false);
+  const [isAligned, setIsAligned] = useState(false);
   const orientationListenerRef = useRef(false);
+  const lastHapticRef = useRef(0);
 
   const fetchLocationName = useCallback(async (latitude: number, longitude: number) => {
     try {
@@ -82,20 +92,39 @@ export const useQiblaDirection = () => {
 
   // Smoothing for compass heading
   const lastHeadingRef = useRef<number | null>(null);
+  const qiblaDataRef = useRef<QiblaData | null>(null);
+
+  // Keep ref in sync
+  useEffect(() => {
+    qiblaDataRef.current = qiblaData;
+  }, [qiblaData]);
+
+  const triggerHaptic = useCallback(() => {
+    const now = Date.now();
+    // Throttle haptic to once every 2 seconds
+    if (now - lastHapticRef.current < 2000) return;
+    lastHapticRef.current = now;
+
+    if (navigator.vibrate) {
+      navigator.vibrate([50, 30, 50]); // Double pulse
+    }
+  }, []);
 
   const handleOrientation = useCallback((event: DeviceOrientationEvent) => {
-    // iOS provides webkitCompassHeading (0=North, clockwise)
     const iosHeading = (event as any).webkitCompassHeading;
-    // Android absolute orientation: alpha is degrees from North (but counterclockwise)
     const alpha = event.alpha;
+    const absolute = (event as any).absolute;
 
     let heading: number | null = null;
 
     if (typeof iosHeading === "number" && !isNaN(iosHeading)) {
+      // iOS: webkitCompassHeading is clockwise from true north
       heading = iosHeading;
+    } else if (typeof alpha === "number" && !isNaN(alpha) && absolute) {
+      // Android absolute: alpha is counterclockwise from north
+      heading = (360 - alpha) % 360;
     } else if (typeof alpha === "number" && !isNaN(alpha)) {
-      // For absolute orientation, alpha=0 means North, but it goes counterclockwise
-      // Convert to clockwise compass heading
+      // Fallback: non-absolute orientation (less accurate but better than nothing)
       heading = (360 - alpha) % 360;
     }
 
@@ -103,21 +132,31 @@ export const useQiblaDirection = () => {
       // Smooth the heading to avoid jitter
       if (lastHeadingRef.current !== null) {
         let diff = heading - lastHeadingRef.current;
-        // Handle wrap-around
         if (diff > 180) diff -= 360;
         if (diff < -180) diff += 360;
-        // Low-pass filter
-        heading = (lastHeadingRef.current + diff * 0.3 + 360) % 360;
+        // Low-pass filter with faster response
+        heading = (lastHeadingRef.current + diff * 0.4 + 360) % 360;
       }
       lastHeadingRef.current = heading;
-      setCompassHeading(Math.round(heading * 10) / 10);
+      const rounded = Math.round(heading * 10) / 10;
+      setCompassHeading(rounded);
+
+      // Check alignment with Qibla
+      const qd = qiblaDataRef.current;
+      if (qd) {
+        const diff = Math.abs(angleDiff(qd.direction, rounded));
+        const aligned = diff <= 5;
+        setIsAligned(aligned);
+        if (aligned) {
+          triggerHaptic();
+        }
+      }
     }
-  }, []);
+  }, [triggerHaptic]);
 
   const requestOrientationPermission = useCallback(async () => {
     if (orientationListenerRef.current) return;
 
-    // iOS 13+ requires explicit permission
     if (typeof (DeviceOrientationEvent as any).requestPermission === "function") {
       try {
         const response = await (DeviceOrientationEvent as any).requestPermission();
@@ -133,7 +172,6 @@ export const useQiblaDirection = () => {
         setPermissionNeeded(true);
       }
     } else {
-      // Try absolute orientation first (Android), fallback to regular
       const win = window as any;
       if ("ondeviceorientationabsolute" in win) {
         win.addEventListener("deviceorientationabsolute", handleOrientation, true);
@@ -174,5 +212,5 @@ export const useQiblaDirection = () => {
     };
   }, [updateQiblaData, requestOrientationPermission, handleOrientation]);
 
-  return { qiblaData, loading, error, compassHeading, permissionNeeded, requestOrientationPermission };
+  return { qiblaData, loading, error, compassHeading, permissionNeeded, isAligned, requestOrientationPermission };
 };

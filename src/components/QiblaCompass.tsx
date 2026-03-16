@@ -14,20 +14,18 @@ const getDirectionLabel = (degrees: number): string => {
 };
 
 const QiblaCompass = () => {
-  const { qiblaData, loading, error, compassHeading, permissionNeeded, requestOrientationPermission } = useQiblaDirection();
+  const { qiblaData, loading, error, compassHeading, permissionNeeded, isAligned, requestOrientationPermission } = useQiblaDirection();
 
   const hasCompass = compassHeading !== null;
 
-  // Needle always points toward Qibla
-  // If compass available: rotate = qiblaDirection - deviceHeading
-  // If no compass: just show static qibla bearing
+  // Needle points toward Qibla relative to device orientation
   const needleRotation = qiblaData
     ? hasCompass
       ? qiblaData.direction - compassHeading
       : qiblaData.direction
     : 0;
 
-  // Compass ring rotation (rotates opposite to device heading so N stays correct)
+  // Compass ring counter-rotates so N label tracks true north
   const compassRingRotation = hasCompass ? -compassHeading : 0;
 
   const handleRefresh = () => {
@@ -120,7 +118,13 @@ const QiblaCompass = () => {
                 </p>
               )}
 
-              {hasCompass && (
+              {hasCompass && isAligned && (
+                <p className="mt-4 text-sm text-green-600 bg-green-500/10 p-3 rounded-lg font-bold animate-pulse">
+                  ✅ You are facing Qibla! — Allahu Akbar
+                </p>
+              )}
+
+              {hasCompass && !isAligned && (
                 <p className="mt-4 text-sm text-primary bg-primary/10 p-3 rounded-lg font-medium">
                   🧭 Live compass active — rotate your device to find Qibla
                 </p>
@@ -129,13 +133,13 @@ const QiblaCompass = () => {
 
             {/* Compass visual */}
             <div className="flex justify-center">
-              <div className="relative w-72 h-72">
+              <div className={`relative w-72 h-72 ${isAligned ? "ring-4 ring-green-500/50 rounded-full" : ""}`}>
                 {/* Outer ring */}
                 <div className="absolute inset-0 rounded-full border-4 border-primary/20 bg-gradient-to-br from-card to-muted shadow-elevated" />
                 
-                {/* Compass markings - rotate with device */}
+                {/* Compass markings - rotate with device (no CSS transition, JS-smoothed) */}
                 <div 
-                  className="absolute inset-4 rounded-full border-2 border-gold/30 transition-transform duration-150 ease-out"
+                  className="absolute inset-4 rounded-full border-2 border-gold/30"
                   style={{ transform: `rotate(${compassRingRotation}deg)` }}
                 >
                   <span className="absolute -top-1 left-1/2 -translate-x-1/2 text-sm font-bold text-primary bg-card px-1 rounded">N</span>
@@ -160,15 +164,15 @@ const QiblaCompass = () => {
 
                 {/* Inner compass face */}
                 <div className="absolute inset-10 rounded-full bg-card shadow-soft flex items-center justify-center overflow-hidden">
-                  {/* Qibla needle */}
+                  {/* Qibla needle (no CSS transition — smoothed via JS low-pass filter) */}
                   <div 
-                    className="absolute w-full h-full transition-transform duration-150 ease-out"
+                    className="absolute w-full h-full"
                     style={{ transform: `rotate(${needleRotation}deg)` }}
                   >
                     {/* Arrow pointing up (toward Qibla) */}
                     <div className="absolute left-1/2 top-3 -translate-x-1/2 flex flex-col items-center">
-                      <div className="w-0 h-0 border-l-[8px] border-l-transparent border-r-[8px] border-r-transparent border-b-[14px] border-b-primary" />
-                      <div className="w-1.5 h-16 bg-gradient-to-b from-primary to-primary/40 rounded-b" />
+                      <div className={`w-0 h-0 border-l-[8px] border-l-transparent border-r-[8px] border-r-transparent border-b-[14px] ${isAligned ? "border-b-green-500" : "border-b-primary"}`} />
+                      <div className={`w-1.5 h-16 rounded-b bg-gradient-to-b ${isAligned ? "from-green-500 to-green-500/40" : "from-primary to-primary/40"}`} />
                     </div>
                     {/* Tail */}
                     <div className="absolute left-1/2 bottom-3 -translate-x-1/2 flex flex-col items-center">
@@ -176,12 +180,12 @@ const QiblaCompass = () => {
                     </div>
                   </div>
                   {/* Center dot */}
-                  <div className="relative z-10 w-5 h-5 rounded-full bg-gold shadow-gold border-2 border-card" />
+                  <div className={`relative z-10 w-5 h-5 rounded-full border-2 border-card shadow-gold ${isAligned ? "bg-green-500" : "bg-gold"}`} />
                 </div>
 
                 {/* Kaaba icon at the Qibla direction on the outer ring */}
                 <div 
-                  className="absolute w-10 h-10 bg-primary rounded-lg flex items-center justify-center shadow-soft z-20 transition-all duration-150 ease-out"
+                  className={`absolute w-10 h-10 rounded-lg flex items-center justify-center shadow-soft z-20 ${isAligned ? "bg-green-500" : "bg-primary"}`}
                   style={{ 
                     left: `${50 + 42 * Math.sin((needleRotation * Math.PI) / 180)}%`,
                     top: `${50 - 42 * Math.cos((needleRotation * Math.PI) / 180)}%`,
