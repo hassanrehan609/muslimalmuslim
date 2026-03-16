@@ -134,10 +134,11 @@ export const useQiblaDirection = () => {
       }
     } else {
       // Try absolute orientation first (Android), fallback to regular
-      if ("ondeviceorientationabsolute" in window) {
-        window.addEventListener("deviceorientationabsolute" as any, handleOrientation, true);
+      const win = window as any;
+      if ("ondeviceorientationabsolute" in win) {
+        win.addEventListener("deviceorientationabsolute", handleOrientation, true);
       } else {
-        window.addEventListener("deviceorientation", handleOrientation, true);
+        win.addEventListener("deviceorientation", handleOrientation, true);
       }
       orientationListenerRef.current = true;
     }
