@@ -14,22 +14,21 @@ const getDirectionLabel = (degrees: number): string => {
 };
 
 const QiblaCompass = () => {
-  const { qiblaData, loading, error, compassHeading } = useQiblaDirection();
+  const { qiblaData, loading, error, compassHeading, permissionNeeded, requestOrientationPermission } = useQiblaDirection();
 
-  // Calculate the rotation for the needle (relative to device orientation if available)
+  const hasCompass = compassHeading !== null;
+
+  // Needle always points toward Qibla
+  // If compass available: rotate = qiblaDirection - deviceHeading
+  // If no compass: just show static qibla bearing
   const needleRotation = qiblaData
-    ? compassHeading !== null
+    ? hasCompass
       ? qiblaData.direction - compassHeading
       : qiblaData.direction
     : 0;
 
-  // Calculate Kaaba icon position based on direction
-  const kaabaPosition = qiblaData
-    ? {
-        x: 50 + 35 * Math.sin((needleRotation * Math.PI) / 180),
-        y: 50 - 35 * Math.cos((needleRotation * Math.PI) / 180),
-      }
-    : { x: 85, y: 15 };
+  // Compass ring rotation (rotates opposite to device heading so N stays correct)
+  const compassRingRotation = hasCompass ? -compassHeading : 0;
 
   const handleRefresh = () => {
     window.location.reload();
@@ -105,51 +104,91 @@ const QiblaCompass = () => {
                 </p>
               )}
 
-              {compassHeading === null && !loading && (
+              {permissionNeeded && (
+                <Button 
+                  onClick={requestOrientationPermission}
+                  className="mt-4 w-full"
+                  variant="outline"
+                >
+                  🧭 Enable Compass (Tap to Allow)
+                </Button>
+              )}
+
+              {!hasCompass && !loading && !permissionNeeded && (
                 <p className="mt-4 text-sm text-muted-foreground bg-muted p-3 rounded-lg">
-                  💡 Tip: On mobile, rotate your device to see the compass needle point towards Qibla.
+                  💡 Tip: On mobile, rotate your device to see the compass needle point towards Qibla in real-time.
+                </p>
+              )}
+
+              {hasCompass && (
+                <p className="mt-4 text-sm text-primary bg-primary/10 p-3 rounded-lg font-medium">
+                  🧭 Live compass active — rotate your device to find Qibla
                 </p>
               )}
             </div>
 
             {/* Compass visual */}
             <div className="flex justify-center">
-              <div className="relative w-64 h-64">
+              <div className="relative w-72 h-72">
                 {/* Outer ring */}
                 <div className="absolute inset-0 rounded-full border-4 border-primary/20 bg-gradient-to-br from-card to-muted shadow-elevated" />
                 
-                {/* Compass markings */}
-                <div className="absolute inset-4 rounded-full border-2 border-gold/30">
-                  {/* Cardinal directions */}
-                  <span className="absolute top-2 left-1/2 -translate-x-1/2 text-sm font-bold text-foreground">N</span>
-                  <span className="absolute bottom-2 left-1/2 -translate-x-1/2 text-sm font-bold text-muted-foreground">S</span>
-                  <span className="absolute left-2 top-1/2 -translate-y-1/2 text-sm font-bold text-muted-foreground">W</span>
-                  <span className="absolute right-2 top-1/2 -translate-y-1/2 text-sm font-bold text-muted-foreground">E</span>
-                </div>
-
-                {/* Inner compass */}
-                <div className="absolute inset-8 rounded-full bg-card shadow-soft flex items-center justify-center">
-                  <div className="relative">
-                    {/* Qibla needle */}
-                    <div 
-                      className="absolute w-1 h-20 bg-gradient-to-t from-primary to-gold rounded-full origin-bottom left-1/2 -translate-x-1/2 bottom-1/2 transition-transform duration-300"
-                      style={{ transform: `translateX(-50%) rotate(${needleRotation}deg)` }}
-                    />
-                    {/* Center dot */}
-                    <div className="w-4 h-4 rounded-full bg-gold shadow-gold" />
-                  </div>
-                </div>
-
-                {/* Kaaba icon at Qibla direction */}
+                {/* Compass markings - rotate with device */}
                 <div 
-                  className="absolute w-10 h-10 bg-primary rounded-lg flex items-center justify-center shadow-soft transition-all duration-300"
+                  className="absolute inset-4 rounded-full border-2 border-gold/30 transition-transform duration-150 ease-out"
+                  style={{ transform: `rotate(${compassRingRotation}deg)` }}
+                >
+                  <span className="absolute -top-1 left-1/2 -translate-x-1/2 text-sm font-bold text-primary bg-card px-1 rounded">N</span>
+                  <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 text-sm font-bold text-muted-foreground bg-card px-1 rounded">S</span>
+                  <span className="absolute -left-1 top-1/2 -translate-y-1/2 text-sm font-bold text-muted-foreground bg-card px-1 rounded">W</span>
+                  <span className="absolute -right-1 top-1/2 -translate-y-1/2 text-sm font-bold text-muted-foreground bg-card px-1 rounded">E</span>
+                  
+                  {/* Degree ticks */}
+                  {[...Array(36)].map((_, i) => (
+                    <div
+                      key={i}
+                      className="absolute top-0 left-1/2 origin-bottom"
+                      style={{
+                        transform: `translateX(-50%) rotate(${i * 10}deg)`,
+                        height: "50%",
+                      }}
+                    >
+                      <div className={`w-px ${i % 3 === 0 ? "h-3 bg-foreground/40" : "h-1.5 bg-foreground/20"}`} />
+                    </div>
+                  ))}
+                </div>
+
+                {/* Inner compass face */}
+                <div className="absolute inset-10 rounded-full bg-card shadow-soft flex items-center justify-center overflow-hidden">
+                  {/* Qibla needle */}
+                  <div 
+                    className="absolute w-full h-full transition-transform duration-150 ease-out"
+                    style={{ transform: `rotate(${needleRotation}deg)` }}
+                  >
+                    {/* Arrow pointing up (toward Qibla) */}
+                    <div className="absolute left-1/2 top-3 -translate-x-1/2 flex flex-col items-center">
+                      <div className="w-0 h-0 border-l-[8px] border-l-transparent border-r-[8px] border-r-transparent border-b-[14px] border-b-primary" />
+                      <div className="w-1.5 h-16 bg-gradient-to-b from-primary to-primary/40 rounded-b" />
+                    </div>
+                    {/* Tail */}
+                    <div className="absolute left-1/2 bottom-3 -translate-x-1/2 flex flex-col items-center">
+                      <div className="w-1 h-12 bg-gradient-to-t from-muted-foreground/30 to-muted-foreground/10 rounded-t" />
+                    </div>
+                  </div>
+                  {/* Center dot */}
+                  <div className="relative z-10 w-5 h-5 rounded-full bg-gold shadow-gold border-2 border-card" />
+                </div>
+
+                {/* Kaaba icon at the Qibla direction on the outer ring */}
+                <div 
+                  className="absolute w-10 h-10 bg-primary rounded-lg flex items-center justify-center shadow-soft z-20 transition-all duration-150 ease-out"
                   style={{ 
-                    left: `${kaabaPosition.x}%`,
-                    top: `${kaabaPosition.y}%`,
+                    left: `${50 + 42 * Math.sin((needleRotation * Math.PI) / 180)}%`,
+                    top: `${50 - 42 * Math.cos((needleRotation * Math.PI) / 180)}%`,
                     transform: "translate(-50%, -50%)",
                   }}
                 >
-                  <span className="text-primary-foreground text-xs font-bold">🕋</span>
+                  <span className="text-lg">🕋</span>
                 </div>
               </div>
             </div>

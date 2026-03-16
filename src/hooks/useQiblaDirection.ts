@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 
 interface QiblaData {
   direction: number;
@@ -9,16 +9,14 @@ interface QiblaData {
   distance: number;
 }
 
-// Kaaba coordinates (verified accurate)
 const KAABA_LAT = 21.422487;
 const KAABA_LNG = 39.826206;
 
 const toRadians = (degrees: number) => (degrees * Math.PI) / 180;
 const toDegrees = (radians: number) => (radians * 180) / Math.PI;
 
-// Haversine formula for distance
 const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
-  const R = 6371; // Earth's radius in km
+  const R = 6371;
   const dLat = toRadians(lat2 - lat1);
   const dLon = toRadians(lon2 - lon1);
   const a =
@@ -28,7 +26,6 @@ const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: numbe
   return Math.round(R * c);
 };
 
-// Calculate Qibla direction using great circle bearing
 const calculateQiblaDirection = (lat: number, lng: number): number => {
   const lat1 = toRadians(lat);
   const lat2 = toRadians(KAABA_LAT);
@@ -38,7 +35,7 @@ const calculateQiblaDirection = (lat: number, lng: number): number => {
   const y = Math.cos(lat1) * Math.sin(lat2) - Math.sin(lat1) * Math.cos(lat2) * Math.cos(dLng);
 
   let bearing = toDegrees(Math.atan2(x, y));
-  return (bearing + 360) % 360; // Normalize to 0-360
+  return (bearing + 360) % 360;
 };
 
 export const useQiblaDirection = () => {
@@ -46,6 +43,8 @@ export const useQiblaDirection = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [compassHeading, setCompassHeading] = useState<number | null>(null);
+  const [permissionNeeded, setPermissionNeeded] = useState(false);
+  const orientationListenerRef = useRef(false);
 
   const fetchLocationName = useCallback(async (latitude: number, longitude: number) => {
     try {
@@ -81,17 +80,77 @@ export const useQiblaDirection = () => {
     [fetchLocationName]
   );
 
+  // Smoothing for compass heading
+  const lastHeadingRef = useRef<number | null>(null);
+
+  const handleOrientation = useCallback((event: DeviceOrientationEvent) => {
+    // iOS provides webkitCompassHeading (0=North, clockwise)
+    const iosHeading = (event as any).webkitCompassHeading;
+    // Android absolute orientation: alpha is degrees from North (but counterclockwise)
+    const alpha = event.alpha;
+
+    let heading: number | null = null;
+
+    if (typeof iosHeading === "number" && !isNaN(iosHeading)) {
+      heading = iosHeading;
+    } else if (typeof alpha === "number" && !isNaN(alpha)) {
+      // For absolute orientation, alpha=0 means North, but it goes counterclockwise
+      // Convert to clockwise compass heading
+      heading = (360 - alpha) % 360;
+    }
+
+    if (heading !== null) {
+      // Smooth the heading to avoid jitter
+      if (lastHeadingRef.current !== null) {
+        let diff = heading - lastHeadingRef.current;
+        // Handle wrap-around
+        if (diff > 180) diff -= 360;
+        if (diff < -180) diff += 360;
+        // Low-pass filter
+        heading = (lastHeadingRef.current + diff * 0.3 + 360) % 360;
+      }
+      lastHeadingRef.current = heading;
+      setCompassHeading(Math.round(heading * 10) / 10);
+    }
+  }, []);
+
+  const requestOrientationPermission = useCallback(async () => {
+    if (orientationListenerRef.current) return;
+
+    // iOS 13+ requires explicit permission
+    if (typeof (DeviceOrientationEvent as any).requestPermission === "function") {
+      try {
+        const response = await (DeviceOrientationEvent as any).requestPermission();
+        if (response === "granted") {
+          window.addEventListener("deviceorientation", handleOrientation, true);
+          orientationListenerRef.current = true;
+          setPermissionNeeded(false);
+        } else {
+          setPermissionNeeded(true);
+        }
+      } catch (e) {
+        console.error("Orientation permission error:", e);
+        setPermissionNeeded(true);
+      }
+    } else {
+      // Try absolute orientation first (Android), fallback to regular
+      const win = window as any;
+      if ("ondeviceorientationabsolute" in win) {
+        win.addEventListener("deviceorientationabsolute", handleOrientation, true);
+      } else {
+        win.addEventListener("deviceorientation", handleOrientation, true);
+      }
+      orientationListenerRef.current = true;
+    }
+  }, [handleOrientation]);
+
   useEffect(() => {
     let watchId: number | null = null;
 
-    const startWatching = () => {
-      if (!navigator.geolocation) {
-        setError("Geolocation is not supported");
-        setLoading(false);
-        return;
-      }
-
-      // Use watchPosition for live updates
+    if (!navigator.geolocation) {
+      setError("Geolocation is not supported");
+      setLoading(false);
+    } else {
       watchId = navigator.geolocation.watchPosition(
         (position) => {
           updateQiblaData(position.coords.latitude, position.coords.longitude);
@@ -99,52 +158,21 @@ export const useQiblaDirection = () => {
         (err) => {
           console.error("Geolocation error:", err);
           setError("Unable to get your location. Using default location.");
-          // Fallback to Mecca for demo
-          updateQiblaData(24.7136, 46.6753); // Riyadh as fallback
+          updateQiblaData(24.7136, 46.6753);
         },
-        { 
-          timeout: 15000, 
-          enableHighAccuracy: true,
-          maximumAge: 30000 
-        }
+        { timeout: 15000, enableHighAccuracy: true, maximumAge: 30000 }
       );
-    };
+    }
 
-    // Device orientation for compass
-    const handleOrientation = (event: DeviceOrientationEvent) => {
-      // Use webkitCompassHeading for iOS, alpha for others
-      const heading = (event as any).webkitCompassHeading ?? event.alpha;
-      if (heading !== null && heading !== undefined) {
-        setCompassHeading(heading);
-      }
-    };
-
-    // Request permission for device orientation on iOS 13+
-    const requestOrientationPermission = async () => {
-      if (typeof (DeviceOrientationEvent as any).requestPermission === "function") {
-        try {
-          const response = await (DeviceOrientationEvent as any).requestPermission();
-          if (response === "granted") {
-            window.addEventListener("deviceorientation", handleOrientation, true);
-          }
-        } catch (e) {
-          console.error("Orientation permission error:", e);
-        }
-      } else {
-        window.addEventListener("deviceorientation", handleOrientation, true);
-      }
-    };
-
-    startWatching();
     requestOrientationPermission();
 
     return () => {
-      if (watchId !== null) {
-        navigator.geolocation.clearWatch(watchId);
-      }
+      if (watchId !== null) navigator.geolocation.clearWatch(watchId);
       window.removeEventListener("deviceorientation", handleOrientation, true);
+      (window as any).removeEventListener("deviceorientationabsolute", handleOrientation, true);
+      orientationListenerRef.current = false;
     };
-  }, [updateQiblaData]);
+  }, [updateQiblaData, requestOrientationPermission, handleOrientation]);
 
-  return { qiblaData, loading, error, compassHeading };
+  return { qiblaData, loading, error, compassHeading, permissionNeeded, requestOrientationPermission };
 };
