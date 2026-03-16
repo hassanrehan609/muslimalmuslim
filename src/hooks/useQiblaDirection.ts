@@ -169,7 +169,7 @@ export const useQiblaDirection = () => {
     return () => {
       if (watchId !== null) navigator.geolocation.clearWatch(watchId);
       window.removeEventListener("deviceorientation", handleOrientation, true);
-      window.removeEventListener("deviceorientationabsolute" as any, handleOrientation, true);
+      (window as any).removeEventListener("deviceorientationabsolute", handleOrientation, true);
       orientationListenerRef.current = false;
     };
   }, [updateQiblaData, requestOrientationPermission, handleOrientation]);
