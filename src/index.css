@@ -108,12 +108,12 @@
 
     /* Liquid glass (dark) */
     --glass-bg: 160 30% 16%;
-    --glass-bg-opacity: 0.5;
+    --glass-bg-opacity: 0.3;
     --glass-border: 0 0% 100%;
-    --glass-border-opacity: 0.12;
+    --glass-border-opacity: 0.14;
     --glass-highlight: 0 0% 100%;
     --glass-tint: 158 50% 45%;
-    --glass-blur: 22px;
+    --glass-blur: 16px;
     --glass-saturate: 160%;
     --glass-shadow: 0 8px 32px -8px hsl(0 0% 0% / 0.5), 0 2px 8px -4px hsl(0 0% 0% / 0.4);
 
