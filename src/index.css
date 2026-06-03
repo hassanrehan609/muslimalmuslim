@@ -58,12 +58,12 @@
 
     /* Liquid glass (Apple iOS style) */
     --glass-bg: 40 40% 100%;
-    --glass-bg-opacity: 0.55;
+    --glass-bg-opacity: 0.28;
     --glass-border: 0 0% 100%;
-    --glass-border-opacity: 0.55;
+    --glass-border-opacity: 0.6;
     --glass-highlight: 0 0% 100%;
     --glass-tint: 158 64% 25%;
-    --glass-blur: 22px;
+    --glass-blur: 16px;
     --glass-saturate: 180%;
     --glass-shadow: 0 8px 32px -8px hsl(160 30% 15% / 0.18), 0 2px 8px -4px hsl(160 30% 15% / 0.12);
 
