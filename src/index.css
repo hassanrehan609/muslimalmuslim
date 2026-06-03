@@ -58,12 +58,12 @@
 
     /* Liquid glass (Apple iOS style) */
     --glass-bg: 40 40% 100%;
-    --glass-bg-opacity: 0.55;
+    --glass-bg-opacity: 0.28;
     --glass-border: 0 0% 100%;
-    --glass-border-opacity: 0.55;
+    --glass-border-opacity: 0.6;
     --glass-highlight: 0 0% 100%;
     --glass-tint: 158 64% 25%;
-    --glass-blur: 22px;
+    --glass-blur: 16px;
     --glass-saturate: 180%;
     --glass-shadow: 0 8px 32px -8px hsl(160 30% 15% / 0.18), 0 2px 8px -4px hsl(160 30% 15% / 0.12);
 
@@ -108,12 +108,12 @@
 
     /* Liquid glass (dark) */
     --glass-bg: 160 30% 16%;
-    --glass-bg-opacity: 0.5;
+    --glass-bg-opacity: 0.3;
     --glass-border: 0 0% 100%;
-    --glass-border-opacity: 0.12;
+    --glass-border-opacity: 0.14;
     --glass-highlight: 0 0% 100%;
     --glass-tint: 158 50% 45%;
-    --glass-blur: 22px;
+    --glass-blur: 16px;
     --glass-saturate: 160%;
     --glass-shadow: 0 8px 32px -8px hsl(0 0% 0% / 0.5), 0 2px 8px -4px hsl(0 0% 0% / 0.4);
 
@@ -173,6 +173,10 @@
     border: 1px solid hsl(var(--glass-border) / var(--glass-border-opacity));
     box-shadow: var(--glass-shadow), inset 0 1px 0 0 hsl(var(--glass-highlight) / 0.5);
     overflow: hidden;
+    /* Isolate paint + promote to its own GPU layer so blur is composited,
+       not repainted on every scroll/hover — prevents jank. */
+    contain: paint;
+    transform: translateZ(0);
   }
 
   /* Specular sheen across the top edge — the signature liquid glass glint */
@@ -183,8 +187,8 @@
     border-radius: inherit;
     background: linear-gradient(
       180deg,
-      hsl(var(--glass-highlight) / 0.35) 0%,
-      hsl(var(--glass-highlight) / 0.05) 18%,
+      hsl(var(--glass-highlight) / 0.4) 0%,
+      hsl(var(--glass-highlight) / 0.06) 18%,
       transparent 45%
     );
     pointer-events: none;
@@ -197,22 +201,61 @@
   }
 
   .glass-strong {
-    --glass-bg-opacity: 0.72;
-    --glass-blur: 30px;
+    --glass-bg-opacity: 0.42;
+    --glass-blur: 20px;
   }
 
   .glass-subtle {
-    --glass-bg-opacity: 0.4;
-    --glass-blur: 16px;
+    --glass-bg-opacity: 0.18;
+    --glass-blur: 12px;
   }
 
   /* Frosted navigation bar */
   .glass-nav {
-    background: hsl(var(--glass-bg) / 0.65);
-    -webkit-backdrop-filter: blur(24px) saturate(180%);
-    backdrop-filter: blur(24px) saturate(180%);
+    background: hsl(var(--glass-bg) / 0.4);
+    -webkit-backdrop-filter: blur(18px) saturate(180%);
+    backdrop-filter: blur(18px) saturate(180%);
     border-bottom: 1px solid hsl(var(--glass-border) / var(--glass-border-opacity));
     box-shadow: inset 0 -1px 0 0 hsl(var(--glass-highlight) / 0.15);
+    transform: translateZ(0);
+  }
+
+  /* Fallback: browsers without backdrop-filter support get a solid-ish
+     translucent surface so content stays readable (no see-through-to-blur). */
+  @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    .glass,
+    .glass-strong,
+    .glass-subtle {
+      background: hsl(var(--glass-bg) / 0.85);
+    }
+    .glass-nav {
+      background: hsl(var(--glass-bg) / 0.9);
+    }
+  }
+
+  /* Low-end / small screens: cut blur radius (cost scales with radius) to
+     keep scrolling smooth on mobile GPUs. */
+  @media (max-width: 640px) {
+    .glass { --glass-blur: 12px; }
+    .glass-strong { --glass-blur: 14px; }
+    .glass-subtle { --glass-blur: 8px; }
+    .glass-nav {
+      -webkit-backdrop-filter: blur(12px) saturate(160%);
+      backdrop-filter: blur(12px) saturate(160%);
+    }
+  }
+
+  /* Respect users who reduce transparency/motion: drop backdrop blur entirely. */
+  @media (prefers-reduced-transparency: reduce), (prefers-reduced-motion: reduce) {
+    .glass,
+    .glass-strong,
+    .glass-subtle,
+    .glass-nav {
+      -webkit-backdrop-filter: none;
+      backdrop-filter: none;
+      background: hsl(var(--glass-bg) / 0.9);
+      will-change: auto;
+    }
   }
 
   .text-gradient-gold {
@@ -221,6 +264,8 @@
     -webkit-text-fill-color: transparent;
     background-clip: text;
   }
+
+
 
 }
 
