@@ -56,6 +56,17 @@
     --shadow-gold: 0 4px 20px -4px hsl(42 75% 55% / 0.3);
     --shadow-elevated: 0 8px 30px -8px hsl(160 30% 15% / 0.2);
 
+    /* Liquid glass (Apple iOS style) */
+    --glass-bg: 40 40% 100%;
+    --glass-bg-opacity: 0.55;
+    --glass-border: 0 0% 100%;
+    --glass-border-opacity: 0.55;
+    --glass-highlight: 0 0% 100%;
+    --glass-tint: 158 64% 25%;
+    --glass-blur: 22px;
+    --glass-saturate: 180%;
+    --glass-shadow: 0 8px 32px -8px hsl(160 30% 15% / 0.18), 0 2px 8px -4px hsl(160 30% 15% / 0.12);
+
     --sidebar-background: 0 0% 98%;
     --sidebar-foreground: 240 5.3% 26.1%;
     --sidebar-primary: 240 5.9% 10%;
