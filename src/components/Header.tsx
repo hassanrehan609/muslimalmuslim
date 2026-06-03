@@ -13,7 +13,7 @@ const Header = () => {
   const { signOut } = useAuth();
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b border-border/50">
+    <header className="fixed top-0 left-0 right-0 z-50 glass-nav">
       <div className="container mx-auto px-4 h-16 flex items-center justify-between">
         <Link to="/" className="flex items-center gap-3">
           <div className="relative">
@@ -74,7 +74,7 @@ const Header = () => {
 
       {/* Mobile menu */}
       {mobileMenuOpen && (
-        <nav className="md:hidden bg-background border-b border-border">
+        <nav className="md:hidden glass-nav">
           <div className="container mx-auto px-4 py-4 flex flex-col gap-4">
             <Link 
               to="/quran" 

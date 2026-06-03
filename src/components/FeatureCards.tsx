@@ -35,7 +35,7 @@ const FeatureCards = () => {
             
             const cardContent = (
               <Card
-                className="group p-6 bg-card hover:bg-primary hover:text-primary-foreground transition-all duration-300 hover:shadow-elevated hover:-translate-y-1 cursor-pointer border-border/50 hover:border-gold/50 h-full"
+                className="group glass-strong p-6 rounded-2xl hover:bg-primary/90 hover:text-primary-foreground transition-all duration-300 hover:shadow-elevated hover:-translate-y-1 cursor-pointer hover:border-gold/50 h-full"
                 style={{ animationDelay: `${index * 0.1}s` }}
               >
                 <div className="w-14 h-14 rounded-xl bg-primary/10 group-hover:bg-primary-foreground/10 flex items-center justify-center mb-4 transition-colors">
