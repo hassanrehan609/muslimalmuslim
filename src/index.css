@@ -177,7 +177,6 @@
        not repainted on every scroll/hover — prevents jank. */
     contain: paint;
     transform: translateZ(0);
-    will-change: backdrop-filter;
   }
 
   /* Specular sheen across the top edge — the signature liquid glass glint */
@@ -219,7 +218,6 @@
     border-bottom: 1px solid hsl(var(--glass-border) / var(--glass-border-opacity));
     box-shadow: inset 0 -1px 0 0 hsl(var(--glass-highlight) / 0.15);
     transform: translateZ(0);
-    will-change: backdrop-filter;
   }
 
   /* Fallback: browsers without backdrop-filter support get a solid-ish
