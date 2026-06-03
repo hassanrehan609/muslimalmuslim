@@ -74,7 +74,7 @@ const Header = () => {
 
       {/* Mobile menu */}
       {mobileMenuOpen && (
-        <nav className="md:hidden bg-background border-b border-border">
+        <nav className="md:hidden glass-nav">
           <div className="container mx-auto px-4 py-4 flex flex-col gap-4">
             <Link 
               to="/quran" 
