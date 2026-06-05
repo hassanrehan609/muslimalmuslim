@@ -1,0 +1,25 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`liquid-glass component snapshots > base Card keeps glass + rounded layout classes 1`] = `
+<div
+  class="glass rounded-2xl text-card-foreground"
+>
+  content
+</div>
+`;
+
+exports[`liquid-glass component snapshots > glass-strong variant snapshot 1`] = `
+<div
+  class="glass rounded-2xl text-card-foreground glass-strong p-6"
+>
+  strong
+</div>
+`;
+
+exports[`liquid-glass component snapshots > glass-subtle variant snapshot 1`] = `
+<div
+  class="glass rounded-2xl text-card-foreground glass-subtle"
+>
+  subtle
+</div>
+`;
