@@ -335,7 +335,7 @@ const ChatbotPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="min-h-screen bg-transparent flex flex-col">
       {/* Header */}
       <header className="bg-primary text-primary-foreground p-4 flex items-center gap-4">
         <Link to="/">

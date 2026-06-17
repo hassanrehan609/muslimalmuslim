@@ -42,7 +42,7 @@ const PrayerTimes = () => {
 
   if (loading) {
     return (
-      <section id="prayers" className="py-20 bg-background">
+      <section id="prayers" className="py-20">
         <div className="container mx-auto px-4">
           <div className="flex flex-col items-center justify-center py-12">
             <Loader2 className="w-8 h-8 text-primary animate-spin mb-4" />
@@ -55,7 +55,7 @@ const PrayerTimes = () => {
 
   if (error && !prayerTimes) {
     return (
-      <section id="prayers" className="py-20 bg-background">
+      <section id="prayers" className="py-20">
         <div className="container mx-auto px-4">
           <div className="text-center py-12">
             <p className="text-destructive mb-2">{error}</p>
@@ -67,7 +67,7 @@ const PrayerTimes = () => {
   }
 
   return (
-    <section id="prayers" className="py-20 bg-background">
+    <section id="prayers" className="py-20">
       <div className="container mx-auto px-4">
         <div className="text-center mb-12">
           <p className="text-gold font-arabic text-xl mb-2">أوقات الصلاة</p>

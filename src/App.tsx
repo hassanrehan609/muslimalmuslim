@@ -7,6 +7,7 @@ import { useServiceWorker } from "./hooks/useServiceWorker";
 import { usePrayerNotifications } from "./hooks/usePrayerNotifications";
 import { LanguageProvider } from "./contexts/LanguageContext";
 import { useAuth } from "./hooks/useAuth";
+import LiquidGlassLayer from "./components/LiquidGlassLayer";
 import Index from "./pages/Index";
 import DuasPage from "./pages/DuasPage";
 import NamesOfAllahPage from "./pages/NamesOfAllahPage";
@@ -49,6 +50,8 @@ const AppContent = () => {
 
   return (
     <>
+      <LiquidGlassLayer />
+
       {!isOnline && (
         <div className="fixed top-0 left-0 right-0 bg-gold text-gold-foreground text-center py-2 text-sm z-[100]">
           You're offline. Some features may be limited.
