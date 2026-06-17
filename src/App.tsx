@@ -7,6 +7,7 @@ import { useServiceWorker } from "./hooks/useServiceWorker";
 import { usePrayerNotifications } from "./hooks/usePrayerNotifications";
 import { LanguageProvider } from "./contexts/LanguageContext";
 import { useAuth } from "./hooks/useAuth";
+import LiquidGlassLayer from "./components/LiquidGlassLayer";
 import Index from "./pages/Index";
 import DuasPage from "./pages/DuasPage";
 import NamesOfAllahPage from "./pages/NamesOfAllahPage";
