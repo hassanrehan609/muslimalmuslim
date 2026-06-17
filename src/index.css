@@ -164,15 +164,91 @@
     border: 1px solid hsl(42 75% 55% / 0.2);
   }
 
+  /* ===== Ambient backdrop (the colourful scene the glass refracts) ===== */
+  .liquid-ambient {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    overflow: hidden;
+    background:
+      radial-gradient(120% 120% at 50% -10%, hsl(158 64% 22%) 0%, transparent 60%),
+      linear-gradient(180deg, hsl(160 35% 10%) 0%, hsl(160 32% 7%) 100%);
+    pointer-events: none;
+  }
+  .dark .liquid-ambient {
+    background:
+      radial-gradient(120% 120% at 50% -10%, hsl(158 60% 14%) 0%, transparent 60%),
+      linear-gradient(180deg, hsl(160 34% 6%) 0%, hsl(160 30% 4%) 100%);
+  }
+  .liquid-ambient__pattern {
+    position: absolute;
+    inset: 0;
+    opacity: 0.5;
+  }
+  .liquid-blob {
+    position: absolute;
+    width: 60vmax;
+    height: 60vmax;
+    border-radius: 50%;
+    filter: blur(60px);
+    opacity: 0.55;
+    will-change: transform;
+    mix-blend-mode: screen;
+  }
+  .liquid-blob--1 {
+    top: -10%; left: -10%;
+    background: radial-gradient(circle, hsl(158 70% 42%) 0%, transparent 70%);
+    animation: blob-float-1 26s ease-in-out infinite;
+  }
+  .liquid-blob--2 {
+    top: 20%; right: -15%;
+    background: radial-gradient(circle, hsl(42 80% 55%) 0%, transparent 70%);
+    opacity: 0.4;
+    animation: blob-float-2 32s ease-in-out infinite;
+  }
+  .liquid-blob--3 {
+    bottom: -15%; left: 10%;
+    background: radial-gradient(circle, hsl(190 70% 45%) 0%, transparent 70%);
+    animation: blob-float-3 30s ease-in-out infinite;
+  }
+  .liquid-blob--4 {
+    bottom: 5%; right: 5%;
+    background: radial-gradient(circle, hsl(220 60% 45%) 0%, transparent 70%);
+    opacity: 0.35;
+    animation: blob-float-1 36s ease-in-out infinite reverse;
+  }
+
+  @keyframes blob-float-1 {
+    0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+    50% { transform: translate3d(8vmax, 6vmax, 0) scale(1.15); }
+  }
+  @keyframes blob-float-2 {
+    0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+    50% { transform: translate3d(-10vmax, 8vmax, 0) scale(1.1); }
+  }
+  @keyframes blob-float-3 {
+    0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+    50% { transform: translate3d(6vmax, -8vmax, 0) scale(1.2); }
+  }
+
   /* ===== Liquid Glass (Apple iOS) ===== */
   .glass {
     position: relative;
-    background: hsl(var(--glass-bg) / var(--glass-bg-opacity));
-    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
-    backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+    background:
+      linear-gradient(135deg, hsl(var(--glass-bg) / calc(var(--glass-bg-opacity) + 0.06)) 0%, hsl(var(--glass-bg) / var(--glass-bg-opacity)) 100%);
+    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate)) brightness(1.06);
+    backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate)) brightness(1.06);
     border: 1px solid hsl(var(--glass-border) / var(--glass-border-opacity));
-    box-shadow: var(--glass-shadow), inset 0 1px 0 0 hsl(var(--glass-highlight) / 0.5);
+    border-radius: 1.75rem;
+    box-shadow:
+      var(--glass-shadow),
+      inset 0 1px 0 0 hsl(var(--glass-highlight) / 0.55),
+      inset 0 -1px 1px 0 hsl(var(--glass-tint) / 0.08),
+      inset 0 0 24px -8px hsl(var(--glass-highlight) / 0.25);
     overflow: hidden;
+    transition:
+      transform 0.5s cubic-bezier(0.22, 1, 0.36, 1),
+      box-shadow 0.5s cubic-bezier(0.22, 1, 0.36, 1);
     /* Isolate paint + promote to its own GPU layer so blur is composited,
        not repainted on every scroll/hover — prevents jank. */
     contain: paint;
@@ -185,13 +261,28 @@
     position: absolute;
     inset: 0;
     border-radius: inherit;
-    background: linear-gradient(
-      180deg,
-      hsl(var(--glass-highlight) / 0.4) 0%,
-      hsl(var(--glass-highlight) / 0.06) 18%,
-      transparent 45%
-    );
+    background:
+      linear-gradient(
+        180deg,
+        hsl(var(--glass-highlight) / 0.45) 0%,
+        hsl(var(--glass-highlight) / 0.08) 16%,
+        transparent 42%
+      );
     pointer-events: none;
+    z-index: 0;
+  }
+
+  /* Diagonal edge reflection / caustic glint sweeping the corners */
+  .glass::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background:
+      radial-gradient(120% 80% at 110% 110%, hsl(var(--glass-tint) / 0.18) 0%, transparent 50%),
+      radial-gradient(100% 60% at -10% -10%, hsl(var(--glass-highlight) / 0.22) 0%, transparent 45%);
+    pointer-events: none;
+    mix-blend-mode: screen;
     z-index: 0;
   }
 
@@ -200,23 +291,50 @@
     z-index: 1;
   }
 
+  /* Interactive surfaces: spring-like lift + brighter edges on hover/press */
+  .glass-interactive {
+    cursor: pointer;
+  }
+  .glass-interactive:hover {
+    transform: translateZ(0) translateY(-2px) scale(1.012);
+    box-shadow:
+      0 18px 48px -12px hsl(160 30% 5% / 0.45),
+      inset 0 1px 0 0 hsl(var(--glass-highlight) / 0.7),
+      inset 0 0 30px -6px hsl(var(--glass-highlight) / 0.35);
+  }
+  .glass-interactive:active {
+    transform: translateZ(0) translateY(0) scale(0.985);
+    transition-duration: 0.12s;
+  }
+
   .glass-strong {
     --glass-bg-opacity: 0.42;
-    --glass-blur: 20px;
+    --glass-blur: 24px;
   }
 
   .glass-subtle {
-    --glass-bg-opacity: 0.18;
-    --glass-blur: 12px;
+    --glass-bg-opacity: 0.16;
+    --glass-blur: 14px;
+  }
+
+  /* Heaviest realism: actual optical distortion of the backdrop via SVG.
+     Used sparingly; degrades to plain glass on unsupported/low-end devices. */
+  .glass-refract::after {
+    -webkit-backdrop-filter: blur(2px);
+    backdrop-filter: blur(2px);
+    filter: url(#liquid-glass-refraction);
   }
 
   /* Frosted navigation bar */
   .glass-nav {
-    background: hsl(var(--glass-bg) / 0.4);
-    -webkit-backdrop-filter: blur(18px) saturate(180%);
-    backdrop-filter: blur(18px) saturate(180%);
+    background: linear-gradient(180deg, hsl(var(--glass-bg) / 0.5) 0%, hsl(var(--glass-bg) / 0.34) 100%);
+    -webkit-backdrop-filter: blur(22px) saturate(180%) brightness(1.05);
+    backdrop-filter: blur(22px) saturate(180%) brightness(1.05);
     border-bottom: 1px solid hsl(var(--glass-border) / var(--glass-border-opacity));
-    box-shadow: inset 0 -1px 0 0 hsl(var(--glass-highlight) / 0.15);
+    box-shadow:
+      inset 0 1px 0 0 hsl(var(--glass-highlight) / 0.4),
+      inset 0 -1px 0 0 hsl(var(--glass-highlight) / 0.12),
+      0 8px 24px -16px hsl(160 30% 5% / 0.5);
     transform: translateZ(0);
   }
 
@@ -226,23 +344,26 @@
     .glass,
     .glass-strong,
     .glass-subtle {
-      background: hsl(var(--glass-bg) / 0.85);
+      background: hsl(var(--glass-bg) / 0.88);
     }
     .glass-nav {
-      background: hsl(var(--glass-bg) / 0.9);
+      background: hsl(var(--glass-bg) / 0.92);
     }
   }
 
   /* Low-end / small screens: cut blur radius (cost scales with radius) to
      keep scrolling smooth on mobile GPUs. */
   @media (max-width: 640px) {
-    .glass { --glass-blur: 12px; }
-    .glass-strong { --glass-blur: 14px; }
-    .glass-subtle { --glass-blur: 8px; }
+    .glass { --glass-blur: 14px; }
+    .glass-strong { --glass-blur: 18px; }
+    .glass-subtle { --glass-blur: 10px; }
+    .liquid-blob { filter: blur(48px); }
     .glass-nav {
-      -webkit-backdrop-filter: blur(12px) saturate(160%);
-      backdrop-filter: blur(12px) saturate(160%);
+      -webkit-backdrop-filter: blur(16px) saturate(170%);
+      backdrop-filter: blur(16px) saturate(170%);
     }
+    /* Refraction filter is expensive on mobile GPUs — drop it. */
+    .glass-refract::after { filter: none; }
   }
 
   /* Respect users who reduce transparency/motion: drop backdrop blur entirely. */
@@ -253,9 +374,12 @@
     .glass-nav {
       -webkit-backdrop-filter: none;
       backdrop-filter: none;
-      background: hsl(var(--glass-bg) / 0.9);
+      background: hsl(var(--glass-bg) / 0.92);
       will-change: auto;
+      transition: none;
     }
+    .liquid-blob { animation: none; }
+    .glass-interactive:hover { transform: translateZ(0); }
   }
 
   .text-gradient-gold {
