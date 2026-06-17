@@ -133,8 +133,16 @@
     @apply border-border;
   }
 
+  html {
+    background-color: hsl(160 32% 7%);
+  }
+  .dark html {
+    background-color: hsl(160 30% 4%);
+  }
+
   body {
-    @apply bg-background text-foreground font-sans antialiased;
+    @apply text-foreground font-sans antialiased;
+    background: transparent;
     font-family: 'Poppins', sans-serif;
   }
 
