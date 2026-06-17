@@ -57,7 +57,7 @@ const TasbeehPage = () => {
   const currentDhikr = dhikrPhrases[selectedDhikr];
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-transparent">
       {/* Header */}
       <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-md border-b border-border/50">
         <div className="container mx-auto px-4 h-16 flex items-center gap-4">

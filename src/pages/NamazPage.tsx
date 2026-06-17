@@ -204,7 +204,7 @@ const NamazPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-transparent">
       {/* Header */}
       <header className="bg-primary text-primary-foreground p-4">
         <div className="container mx-auto flex items-center gap-4">
