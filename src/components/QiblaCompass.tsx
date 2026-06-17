@@ -33,7 +33,7 @@ const QiblaCompass = () => {
   };
 
   return (
-    <section id="qibla" className="py-20 bg-muted islamic-pattern">
+    <section id="qibla" className="py-20 islamic-pattern">
       <div className="container mx-auto px-4">
         <div className="max-w-4xl mx-auto">
           <div className="grid md:grid-cols-2 gap-12 items-center">
