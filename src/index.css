@@ -179,14 +179,9 @@
     z-index: -1;
     overflow: hidden;
     background:
-      radial-gradient(120% 120% at 50% -10%, hsl(158 50% 88%) 0%, transparent 60%),
-      linear-gradient(180deg, hsl(40 35% 96%) 0%, hsl(40 30% 92%) 100%);
+      radial-gradient(120% 120% at 50% -10%, hsl(var(--primary) / 0.22) 0%, transparent 60%),
+      linear-gradient(180deg, hsl(var(--background)) 0%, hsl(var(--muted)) 100%);
     pointer-events: none;
-  }
-  .dark .liquid-ambient {
-    background:
-      radial-gradient(120% 120% at 50% -10%, hsl(158 60% 14%) 0%, transparent 60%),
-      linear-gradient(180deg, hsl(160 34% 6%) 0%, hsl(160 30% 4%) 100%);
   }
   .liquid-ambient__pattern {
     position: absolute;
