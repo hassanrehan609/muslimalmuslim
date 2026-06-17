@@ -50,6 +50,8 @@ const AppContent = () => {
 
   return (
     <>
+      <LiquidGlassLayer />
+
       {!isOnline && (
         <div className="fixed top-0 left-0 right-0 bg-gold text-gold-foreground text-center py-2 text-sm z-[100]">
           You're offline. Some features may be limited.
