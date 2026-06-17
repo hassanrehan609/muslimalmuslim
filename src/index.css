@@ -134,10 +134,7 @@
   }
 
   html {
-    background-color: hsl(40 30% 95%);
-  }
-  .dark html {
-    background-color: hsl(160 30% 4%);
+    background-color: hsl(var(--background));
   }
 
   body {
