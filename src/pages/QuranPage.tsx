@@ -81,56 +81,65 @@ const QuranPage = () => {
   };
 
   const [isPlayingFullSurah, setIsPlayingFullSurah] = useState(false);
+  const fullRef = useRef(false);
+  const versesRef = useRef<Verse[]>([]);
+  versesRef.current = verses;
 
-  const playAudio = (verse: Verse, autoPlayNext = false) => {
-    if (audioRef.current) {
-      audioRef.current.pause();
+  // One reusable audio element: mobile browsers block new Audio() objects
+  // created outside a tap, which is what stopped "Play All" after one verse.
+  const getAudio = () => {
+    if (!audioRef.current) {
+      const a = new Audio();
+      a.preload = "auto";
+      audioRef.current = a;
     }
-    
-    if (playingVerse === verse.numberInSurah && !autoPlayNext) {
-      setPlayingVerse(null);
-      setIsPlayingFullSurah(false);
-      return;
-    }
+    return audioRef.current;
+  };
 
-    audioRef.current = new Audio(verse.audio);
-    audioRef.current.play();
-    setPlayingVerse(verse.numberInSurah);
-    
-    audioRef.current.onended = () => {
-      // Auto-play next verse if playing full surah
-      if (isPlayingFullSurah || autoPlayNext) {
-        const currentIndex = verses.findIndex(v => v.numberInSurah === verse.numberInSurah);
-        if (currentIndex < verses.length - 1) {
-          const nextVerse = verses[currentIndex + 1];
-          playAudio(nextVerse, true);
-        } else {
-          // End of surah
-          setPlayingVerse(null);
-          setIsPlayingFullSurah(false);
-        }
-      } else {
-        setPlayingVerse(null);
-      }
+  const stopAll = () => {
+    audioRef.current?.pause();
+    fullRef.current = false;
+    setIsPlayingFullSurah(false);
+    setPlayingVerse(null);
+  };
+
+  const playIndex = (index: number) => {
+    const list = versesRef.current;
+    if (index >= list.length) return stopAll();
+    const a = getAudio();
+    const v = list[index];
+    a.src = v.audio;
+    setPlayingVerse(v.numberInSurah);
+    a.onended = () => {
+      if (fullRef.current) playIndex(index + 1);
+      else setPlayingVerse(null);
     };
+    a.onerror = () => {
+      if (fullRef.current) playIndex(index + 1);
+    };
+    a.play().catch(() => {
+      if (fullRef.current) setTimeout(() => playIndex(index + 1), 300);
+    });
+    // Preload the next verse so there is no gap
+    const next = list[index + 1];
+    if (next) { const p = new Audio(); p.preload = "auto"; p.src = next.audio; }
+  };
+
+  const playAudio = (verse: Verse) => {
+    if (playingVerse === verse.numberInSurah) return stopAll();
+    const idx = versesRef.current.findIndex((v) => v.numberInSurah === verse.numberInSurah);
+    playIndex(idx);
   };
 
   const playFullSurah = () => {
-    if (isPlayingFullSurah) {
-      // Stop playing
-      if (audioRef.current) {
-        audioRef.current.pause();
-      }
-      setPlayingVerse(null);
-      setIsPlayingFullSurah(false);
-    } else {
-      // Start playing from first verse
-      setIsPlayingFullSurah(true);
-      if (verses.length > 0) {
-        playAudio(verses[0], true);
-      }
-    }
+    if (fullRef.current) return stopAll();
+    fullRef.current = true;
+    setIsPlayingFullSurah(true);
+    const idx = playingVerse ? versesRef.current.findIndex((v) => v.numberInSurah === playingVerse) : 0;
+    playIndex(Math.max(0, idx));
   };
+
+  useEffect(() => () => { audioRef.current?.pause(); }, []);
 
   const handleFavoriteVerse = (verse: Verse, translation: Translation) => {
     if (!selectedSurah) return;
