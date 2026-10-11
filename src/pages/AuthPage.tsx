@@ -92,7 +92,7 @@ const AuthPage = () => {
         email,
         password,
         options: {
-          emailRedirectTo: window.location.origin,
+          emailRedirectTo: new URL(returnTo, window.location.origin).href,
           data: { full_name: fullName, phone_number: cleanPhone }
         }
       });
