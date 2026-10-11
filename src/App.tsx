@@ -21,6 +21,7 @@ import ChatbotPage from "./pages/ChatbotPage";
 import KalmasPage from "./pages/KalmasPage";
 import NamazPage from "./pages/NamazPage";
 import ProfilePage from "./pages/ProfilePage";
+import OAuthConsent from "./pages/OAuthConsent";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -60,6 +61,7 @@ const AppContent = () => {
       <div className={!isOnline ? "pt-10" : ""}>
         <Routes>
           <Route path="/auth" element={<AuthPage />} />
+          <Route path="/.lovable/oauth/consent" element={<OAuthConsent />} />
           <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
           <Route path="/duas" element={<ProtectedRoute><DuasPage /></ProtectedRoute>} />
           <Route path="/names-of-allah" element={<ProtectedRoute><NamesOfAllahPage /></ProtectedRoute>} />

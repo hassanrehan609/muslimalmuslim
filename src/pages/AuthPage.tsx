@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { oauthReturnPath } from "@/lib/oauth-return-path";
 import { Moon, Star, Phone, User, ArrowRight, ArrowLeft, Eye, EyeOff, KeyRound, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -33,6 +34,8 @@ const AuthPage = () => {
   const [confirmPassword, setConfirmPassword] = useState("");
   
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const returnTo = oauthReturnPath(searchParams.get("next"));
   const { toast } = useToast();
   const { t, language } = useLanguage();
 
@@ -41,11 +44,11 @@ const AuthPage = () => {
     const checkSession = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
-        navigate("/");
+        navigate(returnTo);
       }
     };
     checkSession();
-  }, [navigate]);
+  }, [navigate, returnTo]);
 
   const formatPhoneAsEmail = (phoneNumber: string) => {
     const cleanPhone = phoneNumber.replace(/\D/g, '');
@@ -66,7 +69,7 @@ const AuthPage = () => {
       if (error) throw error;
       
       toast({ title: language === "ur" ? "خوش آمدید!" : "Welcome back!", description: language === "ur" ? "لاگ ان کامیاب" : "Login successful" });
-      navigate("/");
+      navigate(returnTo);
     } catch (error: any) {
       toast({ title: language === "ur" ? "لاگ ان ناکام" : "Login failed", description: error.message, variant: "destructive" });
     } finally {
@@ -111,7 +114,7 @@ const AuthPage = () => {
         title: language === "ur" ? "اکاؤنٹ بن گیا!" : "Account created!", 
         description: language === "ur" ? `آپ کا اکاؤنٹ نمبر: ${cleanPhone}` : `Your account number is: ${cleanPhone}` 
       });
-      navigate("/");
+      navigate(returnTo);
     } catch (error: any) {
       toast({ title: language === "ur" ? "سائن اپ ناکام" : "Signup failed", description: error.message, variant: "destructive" });
     } finally {
