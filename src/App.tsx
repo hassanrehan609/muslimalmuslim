@@ -21,6 +21,7 @@ import ChatbotPage from "./pages/ChatbotPage";
 import KalmasPage from "./pages/KalmasPage";
 import NamazPage from "./pages/NamazPage";
 import ProfilePage from "./pages/ProfilePage";
+import ManzilPage from "./pages/ManzilPage";
 import OAuthConsent from "./pages/OAuthConsent";
 import NotFound from "./pages/NotFound";
 
@@ -74,6 +75,7 @@ const AppContent = () => {
           <Route path="/kalmas" element={<ProtectedRoute><KalmasPage /></ProtectedRoute>} />
           <Route path="/namaz" element={<ProtectedRoute><NamazPage /></ProtectedRoute>} />
           <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
+          <Route path="/manzil" element={<ProtectedRoute><ManzilPage /></ProtectedRoute>} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </div>
