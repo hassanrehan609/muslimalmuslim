@@ -1,4 +1,4 @@
-import { BookOpen, Heart, Fingerprint, Star, Calendar, Bookmark, Bot, BookText, Moon } from "lucide-react";
+import { BookOpen, Heart, Fingerprint, Star, Calendar, Bookmark, Bot, BookText, Moon, Shield } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Link } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";

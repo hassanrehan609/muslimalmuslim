@@ -431,3 +431,8 @@
 .safe-area-bottom {
   padding-bottom: env(safe-area-inset-bottom);
 }
+
+/* Budget devices (set by LiquidGlassLayer): keep the glass look, cut GPU cost */
+.lite-glass .liquid-blob { animation: none; filter: blur(40px); }
+.lite-glass .glass, .lite-glass .glass-strong, .lite-glass .glass-subtle { --glass-blur: 10px; will-change: auto; }
+.lite-glass .glass-refract::after { filter: none; }
