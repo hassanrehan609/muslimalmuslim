@@ -1,4 +1,4 @@
-import { BookOpen, Heart, Fingerprint, Star, Calendar, Bookmark, Bot, BookText, Moon } from "lucide-react";
+import { BookOpen, Heart, Fingerprint, Star, Calendar, Bookmark, Bot, BookText, Moon, Shield } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Link } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -8,6 +8,7 @@ const FeatureCards = () => {
 
   const features = [
     { icon: BookOpen, titleKey: "feature.quran", arabic: "القرآن الكريم", descKey: "feature.quran.desc", link: "/quran" },
+    { icon: Shield, titleKey: "feature.manzil", arabic: "المنزل", descKey: "feature.manzil.desc", link: "/manzil" },
     { icon: Heart, titleKey: "feature.duas", arabic: "الأدعية اليومية", descKey: "feature.duas.desc", link: "/duas" },
     { icon: Fingerprint, titleKey: "feature.tasbeeh", arabic: "المسبحة", descKey: "feature.tasbeeh.desc", link: "/tasbeeh" },
     { icon: Star, titleKey: "feature.names", arabic: "أسماء الله الحسنى", descKey: "feature.names.desc", link: "/names-of-allah" },
