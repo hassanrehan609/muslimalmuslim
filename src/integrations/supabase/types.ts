@@ -38,6 +38,36 @@ export type Database = {
         }
         Relationships: []
       }
+      manzil_progress: {
+        Row: {
+          evening_done: number[]
+          last_streak_date: string | null
+          morning_done: number[]
+          progress_date: string
+          streak: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          evening_done?: number[]
+          last_streak_date?: string | null
+          morning_done?: number[]
+          progress_date?: string
+          streak?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          evening_done?: number[]
+          last_streak_date?: string | null
+          morning_done?: number[]
+          progress_date?: string
+          streak?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       password_reset_otps: {
         Row: {
           attempts: number | null
