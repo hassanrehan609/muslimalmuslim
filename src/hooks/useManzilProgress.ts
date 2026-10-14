@@ -26,7 +26,7 @@ export const useManzilProgress = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!user) return;
+    if (!user) { setLoading(false); return; }
     (async () => {
       const { data } = await supabase.from("manzil_progress").select("*").eq("user_id", user.id).maybeSingle();
       if (data) {

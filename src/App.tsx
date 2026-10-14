@@ -75,7 +75,7 @@ const AppContent = () => {
           <Route path="/kalmas" element={<ProtectedRoute><KalmasPage /></ProtectedRoute>} />
           <Route path="/namaz" element={<ProtectedRoute><NamazPage /></ProtectedRoute>} />
           <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
-          <Route path="/manzil" element={<ProtectedRoute><ManzilPage /></ProtectedRoute>} />
+          <Route path="/manzil" element={<ManzilPage />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </div>
