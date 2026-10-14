@@ -15,6 +15,13 @@
       "when": 1791989090648,
       "tag": "0001_quran_plan_and_recitations",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1791989104950,
+      "tag": "0002_recitations_storage_policies",
+      "breakpoints": true
     }
   ]
 }
