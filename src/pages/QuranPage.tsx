@@ -1,5 +1,18 @@
 import { Link } from "react-router-dom";
-import { ArrowLeft, Search, Play, Pause, Heart, BookOpen, ChevronRight } from "lucide-react";
+import { ArrowLeft, Search, Play, Pause, Heart, BookOpen, ChevronRight, Flame } from "lucide-react";
+import { useQuranPlan } from "@/hooks/useQuranPlan";
+import MyRecitations from "@/components/MyRecitations";
+
+const QURAN_RECITERS = [
+  { id: "ar.alafasy", name: "Mishary Alafasy" },
+  { id: "ar.abdurrahmaansudais", name: "Abdurrahman As-Sudais" },
+  { id: "ar.husary", name: "Mahmoud Khalil Al-Husary" },
+  { id: "ar.minshawi", name: "Mohamed Siddiq Al-Minshawi" },
+  { id: "ar.mahermuaiqly", name: "Maher Al-Muaiqly" },
+  { id: "ar.abdulbasitmurattal", name: "Abdul Basit (Murattal)" },
+  { id: "ar.saoodshuraym", name: "Saood Ash-Shuraym" },
+  { id: "ar.shaatree", name: "Abu Bakr Ash-Shaatree" },
+];
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -41,6 +54,11 @@ const QuranPage = () => {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const { isFavorite, toggleFavorite } = useFavorites();
   const { t, language } = useLanguage();
+  const ur = language === "ur";
+  const [reciter, setReciter] = useState(() => localStorage.getItem("quran-reciter") || "ar.alafasy");
+  useEffect(() => { localStorage.setItem("quran-reciter", reciter); }, [reciter]);
+  const [verseResults, setVerseResults] = useState<{ text: string; numberInSurah: number; surah: { number: number; englishName: string } }[]>([]);
+  const { plan, todaySurah, doneToday, markRead } = useQuranPlan();
 
   useEffect(() => {
     const fetchSurahs = async () => {
@@ -58,12 +76,27 @@ const QuranPage = () => {
     fetchSurahs();
   }, [language]);
 
-  const fetchSurahDetails = async (surah: Surah) => {
+  // Search verse text across the whole Quran (English translation)
+  useEffect(() => {
+    const q = searchQuery.trim();
+    if (q.length < 3 || /^\d+$/.test(q)) { setVerseResults([]); return; }
+    const id = setTimeout(async () => {
+      try {
+        const res = await fetch(`https://api.alquran.cloud/v1/search/${encodeURIComponent(q)}/all/en.asad`);
+        const json = await res.json();
+        setVerseResults(json?.data?.matches ?? []);
+      } catch { setVerseResults([]); }
+    }, 400);
+    return () => clearTimeout(id);
+  }, [searchQuery]);
+
+  const fetchSurahDetails = async (surah: Surah, edition = reciter) => {
     setLoadingVerses(true);
     setSelectedSurah(surah);
+    window.scrollTo(0, 0);
     try {
       const [arabicRes, translationRes] = await Promise.all([
-        fetch(`https://api.alquran.cloud/v1/surah/${surah.number}/ar.alafasy`),
+        fetch(`https://api.alquran.cloud/v1/surah/${surah.number}/${edition}`),
         fetch(`https://api.alquran.cloud/v1/surah/${surah.number}/en.asad`),
       ]);
       
@@ -211,6 +244,22 @@ const QuranPage = () => {
         </header>
 
         <main className="container mx-auto px-4 py-8 max-w-4xl">
+          <div className="flex flex-wrap items-center gap-3 mb-4">
+            <span className="text-sm text-muted-foreground">{ur ? "قاری" : "Reciter"}</span>
+            <select
+              value={reciter}
+              onChange={(e) => { stopAll(); setReciter(e.target.value); fetchSurahDetails(selectedSurah, e.target.value); }}
+              className="glass rounded-xl px-3 py-2 text-sm text-foreground bg-transparent"
+            >
+              {QURAN_RECITERS.map((r) => <option key={r.id} value={r.id} className="text-foreground bg-background">{r.name}</option>)}
+            </select>
+            {selectedSurah.number === todaySurah && (
+              <Button size="sm" variant={doneToday ? "secondary" : "default"} disabled={doneToday} onClick={markRead} className="gap-2 ml-auto">
+                <Flame className="w-4 h-4" />{doneToday ? (ur ? "آج مکمل ✓" : "Done today ✓") : (ur ? "آج کی سورہ مکمل" : "Mark today's surah read")}
+              </Button>
+            )}
+          </div>
+          <MyRecitations surah={selectedSurah.number} />
           {loadingVerses ? (
             <div className="flex justify-center py-20">
               <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
@@ -303,18 +352,43 @@ const QuranPage = () => {
       </header>
 
       <main className="container mx-auto px-4 py-8">
+        {surahs.length > 0 && (
+          <Card className="p-5 max-w-3xl mx-auto mb-6">
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <p className="text-xs text-muted-foreground">{ur ? "آج کی سورہ" : "Today's Surah"}</p>
+                <h2 className="text-lg font-bold text-foreground">{todaySurah}. {surahs[todaySurah - 1]?.englishName}</h2>
+                <p className="text-sm text-muted-foreground flex items-center gap-1"><Flame className="w-4 h-4 text-gold" /> {plan.streak} {ur ? "دن کا سلسلہ" : "day streak"} {doneToday && (ur ? "• آج مکمل ✓" : "• done today ✓")}</p>
+              </div>
+              <Button onClick={() => fetchSurahDetails(surahs[todaySurah - 1])} className="gap-2"><BookOpen className="w-4 h-4" />{ur ? "پڑھیں" : "Read"}</Button>
+            </div>
+          </Card>
+        )}
+
         <div className="max-w-md mx-auto mb-8">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
             <Input
               type="text"
-              placeholder={t("quran.search")}
+              placeholder={ur ? "سورہ یا آیت تلاش کریں…" : "Search surah or any verse (e.g. patience)…"}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-10"
             />
           </div>
         </div>
+
+        {verseResults.length > 0 && (
+          <div className="grid gap-2 max-w-3xl mx-auto mb-6">
+            <p className="text-sm text-muted-foreground">{ur ? "آیات" : "Verses"} ({verseResults.length})</p>
+            {verseResults.slice(0, 20).map((r) => (
+              <Card key={`${r.surah.number}-${r.numberInSurah}`} onClick={() => { const s = surahs[r.surah.number - 1]; if (s) fetchSurahDetails(s); }} className="p-3 cursor-pointer">
+                <p className="text-xs text-gold mb-1">{r.surah.englishName} {r.surah.number}:{r.numberInSurah}</p>
+                <p className="text-sm text-foreground">{r.text}</p>
+              </Card>
+            ))}
+          </div>
+        )}
 
         {loading ? (
           <div className="flex justify-center py-20">

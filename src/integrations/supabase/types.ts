@@ -131,6 +131,60 @@ export type Database = {
         }
         Relationships: []
       }
+      quran_plan: {
+        Row: {
+          last_read_date: string | null
+          next_surah: number
+          streak: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          last_read_date?: string | null
+          next_surah?: number
+          streak?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          last_read_date?: string | null
+          next_surah?: number
+          streak?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_recitations: {
+        Row: {
+          ayah: number | null
+          created_at: string
+          file_path: string
+          id: string
+          surah: number
+          title: string | null
+          user_id: string
+        }
+        Insert: {
+          ayah?: number | null
+          created_at?: string
+          file_path: string
+          id?: string
+          surah: number
+          title?: string | null
+          user_id: string
+        }
+        Update: {
+          ayah?: number | null
+          created_at?: string
+          file_path?: string
+          id?: string
+          surah?: number
+          title?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
