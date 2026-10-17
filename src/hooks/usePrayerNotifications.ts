@@ -61,17 +61,20 @@ export const usePrayerNotifications = () => {
         ? `Prepare for ${prayerName} (${prayerInfo?.arabic || ""}) prayer`
         : `It's time for ${prayerName} prayer. ${prayerInfo?.arabic || ""}`;
 
-      const notification = new Notification(title, {
+      const opts = {
         body,
         icon: "/favicon.ico",
         badge: "/favicon.ico",
         tag: `prayer-${prayerName}-${isReminder ? "reminder" : "time"}`,
-      });
-
-      notification.onclick = () => {
-        window.focus();
-        notification.close();
       };
+      // Android Chrome forbids `new Notification`; use the service worker when available.
+      if ("serviceWorker" in navigator) {
+        navigator.serviceWorker.ready
+          .then((reg) => reg.showNotification(title, opts))
+          .catch(() => { try { new Notification(title, opts); } catch (e) { console.error(e); } });
+      } else {
+        try { new Notification(title, opts); } catch (e) { console.error(e); }
+      }
     }
   }, []);
 
@@ -95,8 +98,8 @@ export const usePrayerNotifications = () => {
   const scheduleNotifications = useCallback(() => {
     if (!prayerTimes) return;
     
-    const settings = getSettings();
-    if (!settings) return;
+    const p = { enabled: true, reminderMinutes: 10, adhanSound: "makkah" };
+    const settings = getSettings() ?? { fajr: p, dhuhr: p, asr: p, maghrib: p, isha: p, globalVolume: 80 };
 
     const now = new Date();
     const prayers = ["Fajr", "Dhuhr", "Asr", "Maghrib", "Isha"] as const;
@@ -134,11 +137,6 @@ export const usePrayerNotifications = () => {
   }, [prayerTimes, getSettings, parseTime, showNotification, playAdhan]);
 
   useEffect(() => {
-    // Request notification permission on mount
-    if ("Notification" in window && Notification.permission === "default") {
-      Notification.requestPermission();
-    }
-
     // Schedule notifications
     scheduleNotifications();
 

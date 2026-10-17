@@ -1,7 +1,9 @@
 import { Sun, Sunrise, Moon, Clock, CloudSun, MapPin, Loader2 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { usePrayerTimes } from "@/hooks/usePrayerTimes";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
+import { Bell } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 const prayerConfig = [
   { name: "Fajr", arabic: "الفجر", icon: Sunrise, key: "Fajr" as const },
@@ -14,6 +16,18 @@ const prayerConfig = [
 
 const PrayerTimes = () => {
   const { prayerTimes, location, loading, error, currentDate } = usePrayerTimes();
+
+  const [perm, setPerm] = useState(typeof Notification !== "undefined" ? Notification.permission : "denied");
+  const enableAlerts = async () => {
+    if (typeof Notification === "undefined") return alert("This browser doesn't support notifications.");
+    if (window.top !== window.self) return alert("Open the app in its own tab (or the published link) to allow notifications.");
+    const r = await Notification.requestPermission();
+    setPerm(r);
+    if (r === "granted") {
+      const reg = await navigator.serviceWorker?.ready;
+      reg?.showNotification("Muslim al Muslim", { body: "Adhan alerts are on ✓", icon: "/favicon.ico" });
+    } else alert("Notifications are blocked. Allow them in your browser's site settings.");
+  };
 
   const nextPrayer = useMemo(() => {
     if (!prayerTimes) return null;
@@ -89,6 +103,14 @@ const PrayerTimes = () => {
             <Clock className="w-4 h-4 text-muted-foreground" />
             <span className="text-sm text-muted-foreground">{currentDate}</span>
           </div>
+        </div>
+
+        <div className="flex justify-center mb-8">
+          {perm === "granted" ? (
+            <span className="text-sm text-primary flex items-center gap-2"><Bell className="w-4 h-4" /> Adhan alerts on</span>
+          ) : (
+            <Button onClick={enableAlerts} className="gap-2"><Bell className="w-4 h-4" /> Enable Adhan alerts</Button>
+          )}
         </div>
 
         {/* Prayer cards */}
