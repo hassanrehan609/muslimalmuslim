@@ -1,0 +1,2 @@
+- [ ] End-to-end test: Manzil streak, recite, listen/repeat/sleep, Quran streak (needs test account)
+- [ ] Phone Adhan alert check (user must do on own phone)
