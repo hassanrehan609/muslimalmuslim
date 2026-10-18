@@ -20,6 +20,7 @@ export type Database = {
           created_at: string
           id: string
           role: string
+          thread_id: string | null
           user_id: string | null
         }
         Insert: {
@@ -27,6 +28,7 @@ export type Database = {
           created_at?: string
           id?: string
           role: string
+          thread_id?: string | null
           user_id?: string | null
         }
         Update: {
@@ -34,7 +36,59 @@ export type Database = {
           created_at?: string
           id?: string
           role?: string
+          thread_id?: string | null
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      chat_threads: {
+        Row: {
+          created_at: string
+          id: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          title?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      community_posts: {
+        Row: {
+          author_name: string
+          content: string
+          created_at: string
+          id: string
+          kind: string
+          user_id: string
+        }
+        Insert: {
+          author_name?: string
+          content: string
+          created_at?: string
+          id?: string
+          kind?: string
+          user_id: string
+        }
+        Update: {
+          author_name?: string
+          content?: string
+          created_at?: string
+          id?: string
+          kind?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -150,6 +204,36 @@ export type Database = {
           last_read_date?: string | null
           next_surah?: number
           streak?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_prayer_settings: {
+        Row: {
+          auto_share: boolean
+          city: string | null
+          country: string | null
+          latitude: number | null
+          longitude: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          auto_share?: boolean
+          city?: string | null
+          country?: string | null
+          latitude?: number | null
+          longitude?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          auto_share?: boolean
+          city?: string | null
+          country?: string | null
+          latitude?: number | null
+          longitude?: number | null
           updated_at?: string
           user_id?: string
         }
