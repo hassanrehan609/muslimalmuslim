@@ -1,5 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useParams, useNavigate } from "react-router-dom";
+import { History, Plus, Trash2 } from "lucide-react";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { ArrowLeft, Send, Bot, User, Loader2, Volume2, Pause, Paperclip, Image, FileText, Mic } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -47,6 +49,60 @@ const ChatbotPage = () => {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const messagesRef = useRef<Message[]>([]);
+  const { threadId } = useParams();
+  const navigate = useNavigate();
+  const threadRef = useRef<string | undefined>(threadId);
+  const [threads, setThreads] = useState<{ id: string; title: string; updated_at: string }[]>([]);
+  const [historyOpen, setHistoryOpen] = useState(false);
+
+  const loadThreads = useCallback(async () => {
+    const { data } = await supabase.from("chat_threads").select("id,title,updated_at").order("updated_at", { ascending: false }).limit(50);
+    setThreads(data || []);
+  }, []);
+
+  useEffect(() => { loadThreads(); }, [loadThreads]);
+
+  // Load the messages of the thread in the URL
+  useEffect(() => {
+    threadRef.current = threadId;
+    if (!threadId) { setMessages([{ role: "assistant", content: getWelcomeMessage() }]); return; }
+    supabase.from("chat_messages").select("role,content").eq("thread_id", threadId).order("created_at")
+      .then(({ data, error }) => {
+        if (error) { console.error(error); return; }
+        setMessages([{ role: "assistant", content: getWelcomeMessage() }, ...((data || []) as Message[])]);
+      });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [threadId]);
+
+  const persistExchange = useCallback(async (userText: string, assistantText: string) => {
+    if (!assistantText) return;
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+    let id = threadRef.current;
+    if (!id) {
+      const { data, error } = await supabase.from("chat_threads").insert({ user_id: user.id, title: userText.slice(0, 60) }).select("id").single();
+      if (error || !data) { console.error("thread create failed", error); return; }
+      id = data.id; threadRef.current = id;
+      navigate(`/chatbot/${id}`, { replace: true });
+    } else {
+      await supabase.from("chat_threads").update({ updated_at: new Date().toISOString() }).eq("id", id);
+    }
+    const t0 = Date.now();
+    const { error } = await supabase.from("chat_messages").insert([
+      { user_id: user.id, thread_id: id, role: "user", content: userText, created_at: new Date(t0).toISOString() },
+      { user_id: user.id, thread_id: id, role: "assistant", content: assistantText, created_at: new Date(t0 + 1).toISOString() },
+    ]);
+    if (error) console.error("message save failed", error);
+    loadThreads();
+  }, [navigate, loadThreads]);
+
+  const deleteThread = async (id: string) => {
+    await supabase.from("chat_messages").delete().eq("thread_id", id);
+    await supabase.from("chat_threads").delete().eq("id", id);
+    if (id === threadId) navigate("/chatbot");
+    loadThreads();
+  };
+
   const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/islamic-chat`;
 
   // Keep messagesRef in sync for voice mode callback
@@ -238,6 +294,7 @@ const ChatbotPage = () => {
         setMessages(prev => prev.map((m, i) => 
           i === prev.length - 1 ? { ...m, content: assistantContent } : m
         ));
+        persistExchange(userMessage.content, assistantContent);
       }
     } catch (error) {
       console.error("Chat error:", error);
@@ -317,6 +374,7 @@ const ChatbotPage = () => {
         }
       }
 
+      persistExchange(userMessage.content, assistantContent);
       return assistantContent;
     } catch {
       const errMsg = language === "ur"
@@ -325,7 +383,7 @@ const ChatbotPage = () => {
       setMessages(prev => [...prev, { role: "assistant", content: errMsg }]);
       return errMsg;
     }
-  }, [CHAT_URL, getAuthenticatedHeaders, language]);
+  }, [CHAT_URL, getAuthenticatedHeaders, language, persistExchange]);
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -343,7 +401,7 @@ const ChatbotPage = () => {
             <ArrowLeft className="w-5 h-5" />
           </Button>
         </Link>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 flex-1">
           <div className="w-10 h-10 rounded-full bg-gold/20 flex items-center justify-center">
             <Bot className="w-6 h-6 text-gold" />
           </div>
@@ -356,6 +414,35 @@ const ChatbotPage = () => {
             </p>
           </div>
         </div>
+        <Button variant="ghost" size="icon" className="text-primary-foreground hover:bg-primary-foreground/10" onClick={() => navigate("/chatbot")} aria-label="New chat">
+          <Plus className="w-5 h-5" />
+        </Button>
+        <Sheet open={historyOpen} onOpenChange={setHistoryOpen}>
+          <SheetTrigger asChild>
+            <Button variant="ghost" size="icon" className="text-primary-foreground hover:bg-primary-foreground/10" aria-label="Chat history">
+              <History className="w-5 h-5" />
+            </Button>
+          </SheetTrigger>
+          <SheetContent side="right">
+            <SheetHeader><SheetTitle>{language === "ur" ? "چیٹ کی تاریخ" : "Chat history"}</SheetTitle></SheetHeader>
+            <Button className="w-full my-4" onClick={() => { navigate("/chatbot"); setHistoryOpen(false); }}>
+              <Plus className="w-4 h-4 mr-1" />{language === "ur" ? "نئی چیٹ" : "New chat"}
+            </Button>
+            <div className="space-y-1 overflow-y-auto max-h-[75vh]">
+              {threads.length === 0 && <p className="text-sm text-muted-foreground">{language === "ur" ? "ابھی کوئی چیٹ نہیں" : "No chats yet"}</p>}
+              {threads.map((th) => (
+                <div key={th.id} className={`flex items-center gap-1 rounded-lg ${th.id === threadId ? "bg-primary/10" : ""}`}>
+                  <button className="flex-1 text-left p-2 text-sm truncate text-foreground" onClick={() => { navigate(`/chatbot/${th.id}`); setHistoryOpen(false); }}>
+                    {th.title}
+                  </button>
+                  <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => deleteThread(th.id)} aria-label="Delete chat">
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                </div>
+              ))}
+            </div>
+          </SheetContent>
+        </Sheet>
       </header>
 
       {/* Chat Messages */}
