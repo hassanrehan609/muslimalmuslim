@@ -23,6 +23,8 @@ import NamazPage from "./pages/NamazPage";
 import ProfilePage from "./pages/ProfilePage";
 import ManzilPage from "./pages/ManzilPage";
 import OAuthConsent from "./pages/OAuthConsent";
+import PrayerTimesPage from "./pages/PrayerTimesPage";
+import CommunityPage from "./pages/CommunityPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -72,6 +74,9 @@ const AppContent = () => {
           <Route path="/favorites" element={<ProtectedRoute><FavoritesPage /></ProtectedRoute>} />
           <Route path="/adhan-settings" element={<ProtectedRoute><AdhanSettingsPage /></ProtectedRoute>} />
           <Route path="/chatbot" element={<ProtectedRoute><ChatbotPage /></ProtectedRoute>} />
+          <Route path="/chatbot/:threadId" element={<ProtectedRoute><ChatbotPage /></ProtectedRoute>} />
+          <Route path="/prayer-times" element={<ProtectedRoute><PrayerTimesPage /></ProtectedRoute>} />
+          <Route path="/community" element={<ProtectedRoute><CommunityPage /></ProtectedRoute>} />
           <Route path="/kalmas" element={<ProtectedRoute><KalmasPage /></ProtectedRoute>} />
           <Route path="/namaz" element={<ProtectedRoute><NamazPage /></ProtectedRoute>} />
           <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />

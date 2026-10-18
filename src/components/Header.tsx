@@ -28,6 +28,12 @@ const Header = () => {
         
         <div className="flex items-center gap-4">
           <nav className="hidden md:flex items-center gap-6">
+            <Link to="/prayer-times" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors">
+              {language === "ur" ? "اوقات نماز" : "Prayer Times"}
+            </Link>
+            <Link to="/community" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors">
+              {language === "ur" ? "کمیونٹی" : "Community"}
+            </Link>
             <Link to="/quran" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors">
               {t("nav.quran")}
             </Link>

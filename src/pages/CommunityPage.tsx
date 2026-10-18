@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { BookOpen, Clock, Loader2, Send, Sparkles as _unused, Trash2, Users } from "lucide-react";
+import { BookOpen, Clock, Loader2, Send, Trash2, Users } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Card } from "@/components/ui/card";

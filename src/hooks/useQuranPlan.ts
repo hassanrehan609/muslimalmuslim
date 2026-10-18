@@ -1,3 +1,4 @@
+import { shareToCommunity } from "@/lib/community";
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
@@ -36,6 +37,7 @@ export const useQuranPlan = () => {
       streak: plan.last_read_date === day(-1) ? plan.streak + 1 : 1,
     };
     setPlan(next);
+    shareToCommunity("quran", `📖 Read Surah ${plan.next_surah} today — ${next.streak}-day Quran streak`);
     await supabase.from("quran_plan").upsert({ user_id: user.id, ...next, updated_at: new Date().toISOString() });
   }, [plan, doneToday, user]);
 
