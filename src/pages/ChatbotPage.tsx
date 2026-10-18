@@ -239,7 +239,7 @@ const ChatbotPage = () => {
       const response = await fetch(CHAT_URL, {
         method: "POST",
         headers: await getAuthenticatedHeaders(),
-        body: JSON.stringify({ messages: [...messages, userMessage].map(m => ({ role: m.role, content: m.content })) }),
+        body: JSON.stringify({ messages: [...messages, userMessage].slice(-40).map(m => ({ role: m.role, content: m.content })) }),
       });
 
       if (!response.ok) {
@@ -332,7 +332,7 @@ const ChatbotPage = () => {
         method: "POST",
         headers: await getAuthenticatedHeaders(),
         body: JSON.stringify({
-          messages: [...messagesRef.current, userMessage].map(m => ({ role: m.role, content: m.content })),
+          messages: [...messagesRef.current, userMessage].slice(-40).map(m => ({ role: m.role, content: m.content })),
         }),
       });
 
