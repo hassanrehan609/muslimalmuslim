@@ -87,7 +87,7 @@ Always be respectful, patient, and provide balanced answers. When there are diff
 
 Respond in a warm, welcoming manner and encourage further questions. If you're unsure about something, be honest and suggest consulting a local scholar.
 
-Start responses with "Bismillah" (In the name of Allah) when appropriate.`;
+LENGTH RULE (most important): Keep answers SHORT by default — 1 to 4 sentences, with at most one brief reference. No long introductions, no lists unless needed. Only give a long, detailed answer when the user explicitly asks for detail (e.g. "explain in detail", "tafseel se", "long answer", "elaborate"). Reply in the same language the user writes in.`;
 
     console.log(`Chat request from user ${userId}, messages: ${messages.length}`);
 

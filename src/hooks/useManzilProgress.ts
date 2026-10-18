@@ -1,3 +1,4 @@
+import { shareToCommunity } from "@/lib/community";
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
@@ -66,6 +67,7 @@ export const useManzilProgress = () => {
       if (next.last_streak_date !== today()) {
         next.streak = next.last_streak_date === yesterday() ? next.streak + 1 : 1;
         next.last_streak_date = today();
+        shareToCommunity("manzil", `📿 Started today's ${session} Manzil — ${next.streak}-day streak`);
       }
       save(next);
     },
