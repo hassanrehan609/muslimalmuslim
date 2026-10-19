@@ -185,6 +185,57 @@ export type Database = {
         }
         Relationships: []
       }
+      push_subscriptions: {
+        Row: {
+          auth: string
+          created_at: string
+          endpoint: string
+          id: string
+          latitude: number
+          longitude: number
+          p256dh: string
+          reminder_minutes: number
+          sent: Json
+          times: Json | null
+          times_date: string | null
+          timezone: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          auth: string
+          created_at?: string
+          endpoint: string
+          id?: string
+          latitude: number
+          longitude: number
+          p256dh: string
+          reminder_minutes?: number
+          sent?: Json
+          times?: Json | null
+          times_date?: string | null
+          timezone?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          auth?: string
+          created_at?: string
+          endpoint?: string
+          id?: string
+          latitude?: number
+          longitude?: number
+          p256dh?: string
+          reminder_minutes?: number
+          sent?: Json
+          times?: Json | null
+          times_date?: string | null
+          timezone?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       quran_plan: {
         Row: {
           last_read_date: string | null
