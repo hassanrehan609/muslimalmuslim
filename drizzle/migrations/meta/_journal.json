@@ -29,6 +29,13 @@
       "when": 1792347575590,
       "tag": "0003_chat_threads_community_prayer_settings",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1792424436381,
+      "tag": "0004_push_subscriptions",
+      "breakpoints": true
     }
   ]
 }
