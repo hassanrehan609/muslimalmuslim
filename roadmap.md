@@ -1,2 +1,6 @@
 - [ ] End-to-end test: Manzil streak, recite, listen/repeat/sleep, Quran streak (needs test account)
 - [ ] Phone Adhan alert check (user must do on own phone)
+- [x] AI chat: short answers by default, saved chat history (separate conversations)
+- [x] Prayer Times page (any city, Qibla, synced city)
+- [x] Community page with auto-share toggle
+- [ ] Background Adhan push when app is closed (needs server push setup — awaiting user go-ahead)
